@@ -9,6 +9,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Playground</title>
+</svelte:head>
+
 <div class="max-w-lg mx-auto bg-neutral-200 rounded-xl p-6 shadow-xl grid place-items-center mt-32">
 	<header class="mb-4 flex flex-col items-center">
 		<h1 class="underline uppercase text-xs">count</h1>
