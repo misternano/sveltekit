@@ -55,10 +55,10 @@
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		Tic-Tac-Toe
 	</h1>
-	{#if state !== State.Won}
+	{#if state === State.Won}
 		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-[#171717] bg-clip-text text-transparent">
 			<h2 class="text-9xl font-impact">
-				X WON
+				{winner} WON
 			</h2>
 		</div>
 	{/if}
