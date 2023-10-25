@@ -52,13 +52,13 @@
 </script>
 
 <div class="relative">
-	<h1 class="font-bold text-4xl text-center my-16">
+	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		Tic-Tac-Toe
 	</h1>
-	{#if state === State.Won}
+	{#if state !== State.Won}
 		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-[#171717] bg-clip-text text-transparent">
-			<h2 class="text-9xl">
-				{winner} WON
+			<h2 class="text-9xl font-impact">
+				X WON
 			</h2>
 		</div>
 	{/if}
@@ -213,10 +213,10 @@
 {#if state !== State.Playing}
 	<div class="text-center mt-4">
 		<button
-			class="p-1 px-6 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all"
+			class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
 			on:click={reset}
 		>
-			Play again?
+			Play Again
 		</button>
 	</div>
 {/if}
