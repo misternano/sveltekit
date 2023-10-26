@@ -4,6 +4,11 @@
 
 <svelte:head>
 	<title>log4j Arcade</title>
+	<meta property="og:type" content="website" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:site_name" content="arcade.log4j.dev" />
+	<meta property="og:title" content="Arcade" />
+	<meta property="og:description" content="JS Retro Games Arcade" />
 </svelte:head>
 
 <div class="relative">
