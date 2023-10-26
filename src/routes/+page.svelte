@@ -22,7 +22,7 @@
 	</div>
 </div>
 
-<div class="w-[90%] mt-40 md:mt-0 mx-auto flex flex-row flex-wrap gap-4">
+<div class="w-[90%] md:w-[50%] mt-40 md:mt-0 mx-auto flex flex-row flex-wrap gap-4">
 	<a href="/snake" class="p-2 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all">
 		Snake
 	</a>
