@@ -187,8 +187,8 @@
 			Feed <span class="text-xl">the</span> Snake
 		</h1>
 		{#if playingStatus === "End"}
-			<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
-				<h2 class="text-9xl font-impact">
+			<div class="-z-10 absolute -top-1/2 md:-translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
+				<h2 class="text-6xl md:text-9xl font-impact">
 					HI SCORE {highestScore}
 				</h2>
 			</div>
@@ -198,22 +198,26 @@
 	<div class="relative">
 		<Game highestScore={highestScore} score={score} board={board} />
 		{#if playingStatus === "Pause"}
-			<div class="absolute inset-0 top-6 pt-40 bg-black/10 backdrop-blur-lg">
-				<h1 class="text-4xl text-center font-impact tracking-widest">PAUSED</h1>
-				<button on:click={togglePause} class="mx-auto my-4 flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
-					<Play class="fill-white" size="16" />
-					<span class="uppercase">Resume</span>
-				</button>
-				<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+			<div class="absolute inset-0 top-6 bg-black/10 backdrop-blur-lg">
+				<div class="h-full flex flex-col gap-4 justify-center items-center">
+					<h1 class="text-4xl text-center font-impact tracking-widest">PAUSED</h1>
+					<button on:click={togglePause} class="mx-auto flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
+						<Play class="fill-white" size="16" />
+						<span class="uppercase">Resume</span>
+					</button>
+					<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+				</div>
 			</div>
 		{:else if playingStatus === "End"}
 			<div class="absolute inset-0 top-6 pt-40 bg-black/10 backdrop-blur-sm">
-				<h1 class="text-4xl text-center text-red-500 font-impact tracking-widest">YOU DIED</h1>
-				<button on:click={togglePause} class="mx-auto my-4 flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
-					<RotateCcw size="16" />
-					<span class="uppercase">Restart</span>
-				</button>
-				<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+				<div class="h-full flex flex-col gap-4 justify-center items-center">
+					<h1 class="text-4xl text-center text-red-500 font-impact tracking-widest">YOU DIED</h1>
+					<button on:click={togglePause} class="mx-auto flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
+						<RotateCcw size="16" />
+						<span class="uppercase">Restart</span>
+					</button>
+					<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+				</div>
 			</div>
 		{/if}
 	</div>

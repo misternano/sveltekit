@@ -117,7 +117,7 @@
 		{/each}
 		{#if state !== State.Playing}
 			<div class="absolute inset-0 bg-black/10 backdrop-blur-sm">
-				<div class="flex justify-center items-center h-full">
+				<div class="h-full flex justify-center items-center">
 					<button
 						class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
 						on:click={reset}
@@ -161,7 +161,7 @@
 </div>
 
 <!-- Moved turn display for smaller screens -->
-<div class="w-[50%] mx-auto mt-4 flex flex-row justify-between">
+<div class="w-[80%] mx-auto mt-4 flex flex-row justify-between">
 	<div class="lg:hidden justify-self-center my-auto relative">
 		{#if state === State.Won}
 			{#if winner === Move.X}
