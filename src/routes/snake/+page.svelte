@@ -186,7 +186,7 @@
 		<h1 class="font-impact font-medium text-4xl text-center">
 			Feed <span class="text-xl">the</span> Snake
 		</h1>
-		{#if playingStatus !== "End"}
+		{#if playingStatus === "End"}
 			<div class="-z-10 absolute -top-1/2 md:-translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
 				<h2 class="text-7xl md:text-9xl font-impact">
 					HI SCORE {highestScore}
