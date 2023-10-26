@@ -1,25 +1,30 @@
 <script lang="ts">
+	import "../../app.css";
 	import Game from "./lib/Game.svelte";
 	import { Pause, Play, RotateCcw } from "lucide-svelte";
 	import { swipe } from "svelte-gestures";
+	import { onMount } from "svelte";
 
 	let playingStatus: "Pause" | "Play" | "End" = "Pause"
-	$: isPlaying = playingStatus == "Play";
+	$: isPlaying = playingStatus === "Play";
 	const squareCount = 20;
 
 	let board = new Array(squareCount)
-		.fill (null)
+		.fill(null)
 		.map(() => new Array(squareCount).fill(null));
 	let snake = [[5, 5]];
 	let curDir: "YD" | "YU" | "XL" | "XR" = "YD";
 	let apple: Array<number> | null = null;
-	// let highestScore: number = parseInt(localStorage.getItem("hiScore") || "0");
-	let highestScore: number = 0;
+	let highestScore: number;
 	let score: number = 0;
+
+	onMount(() => {
+		highestScore = parseInt(localStorage.getItem("hiScore") || "0");
+	})
 
 	const drawSnake = () => {
 		board = new Array(squareCount)
-			.fill (null)
+			.fill(null)
 			.map(() => new Array(squareCount).fill(null));
 		snake.forEach(([x, y]) => {
 			board[y][x] = "S";
@@ -53,20 +58,20 @@
 					if (snake[0][1] < 0)
 						snake[0][1] = squareCount - 1;
 					break;
-				case "XL":
-					snake[0][0] = snake[0][0] - 1;
-					if (snake[0][0] < 0)
-						snake[0][0] = squareCount - 1;
-					break;
 				case "XR":
 					snake[0][0] = snake[0][0] + 1;
 					if (snake[0][0] >= squareCount)
 						snake[0][0] = 0;
 					break;
+				case "XL":
+					snake[0][0] = snake[0][0] - 1;
+					if (snake[0][0] < 0)
+						snake[0][0] = squareCount - 1;
+					break;
 			}
 
 			if (snake.slice(1, snake.length).find(([x, y]) => x == snake[0][0] && y == snake[0][1])) {
-				// localStorage.setItem("hiScore", highestScore.toString());
+				localStorage.setItem("hiScore", highestScore.toString());
 				playingStatus = "End";
 				return;
 			}
@@ -91,7 +96,7 @@
 			drawSnake();
 		}
 
-		setTimeout(play, 200);
+		setTimeout(play, 150);
 	}
 
 	const togglePause = () => {
@@ -102,13 +107,12 @@
 		else {
 			apple = getAppleCoordinates();
 			board = new Array(squareCount)
-				.fill (null)
+				.fill(null)
 				.map(() => new Array(squareCount).fill(null));
 			snake = [[5, 5]];
 			curDir = "YD";
 
-			// highestScore = parseInt(localStorage.getItem("hiScore") || "0");
-			highestScore = 0;
+			highestScore = parseInt(localStorage.getItem("hiScore") || "0");
 			score = 0;
 			playingStatus = "Pause";
 			drawSnake();
@@ -119,29 +123,29 @@
 	const onKeyDown = (e: KeyboardEvent) => {
 		if (isPlaying) {
 			switch (e.key) {
-				case "ArrowUp":
-					if (curDir != "YD") curDir = "YU";
-					break;
-				case "ArrowDown":
-					if (curDir != "YU") curDir = "YD";
-					break;
 				case "ArrowLeft":
-					if (curDir != "XR") curDir = "XL";
+					if (curDir !== "YD") curDir = "YU";
 					break;
 				case "ArrowRight":
-					if (curDir != "XL") curDir = "XR";
+					if (curDir !== "YU") curDir = "YD";
 					break;
-				case "w":
-					if (curDir != "YD") curDir = "YU";
+				case "ArrowUp":
+					if (curDir !== "XR") curDir = "XL";
 					break;
-				case "s":
-					if (curDir != "YU") curDir = "YD";
+				case "ArrowDown":
+					if (curDir !== "XL") curDir = "XR";
 					break;
 				case "a":
-					if (curDir != "XR") curDir = "XL";
+					if (curDir !== "YD") curDir = "YU";
 					break;
 				case "d":
-					if (curDir != "XL") curDir = "XR";
+					if (curDir !== "YU") curDir = "YD";
+					break;
+				case "w":
+					if (curDir !== "XR") curDir = "XL";
+					break;
+				case "s":
+					if (curDir !== "XL") curDir = "XR";
 					break;
 			}
 		}
@@ -149,45 +153,76 @@
 		if (e.code == "Space")
 			togglePause();
 	}
+
+	onMount(() => {
+		drawSnake();
+		play();
+	})
 </script>
 
-<div class="w-full flex items-start justify-between h-[100vh]">
-	<section
-		use:swipe={{ timeframe: 300, minSwipeDistance: 60 }}
-		on:swipe={(e) => {
+<div
+	use:swipe={{ timeframe: 300, minSwipeDistance: 60 }}
+	on:swipe={(e) => {
 			if (isPlaying) {
-				switch (e.detail.direction) {
-					case "top":
-						if (curDir !== "YD") curDir = "YU";
-						break;
-					case "bottom":
-						if (curDir !== "YU") curDir = "YD";
-						break;
-					case "left":
-						if (curDir !== "XR") curDir = "XL";
-						break;
-					case "right":
-						if (curDir !== "XL") curDir = "XR";
-						break;
-				}
-			}
+            switch (e.detail.direction) {
+                case "left":
+                    if (curDir !== "YD") curDir = "YU";
+                    break;
+                case "right":
+                    if (curDir !== "YU") curDir = "YD";
+                    break;
+                case "top":
+                    if (curDir !== "XR") curDir = "XL";
+                    break;
+                case "bottom":
+                    if (curDir !== "XL") curDir = "XR";
+                    break;
+            }
+        }
 		}}
-		class="w-full lg:w-[70%] min-h-full p-[25px] flex flex-col items-center justify-between lg:justify-evenly"
-	>
-		<h1 class="w-full text-center font-bold text-4xl">
-			Feed The Snake
+	class="m-8 flex flex-col items-center"
+>
+	<div class="w-full relative my-4">
+		<h1 class="font-impact font-medium text-4xl text-center">
+			Feed <span class="text-xl">the</span> Snake
 		</h1>
+		{#if playingStatus === "End"}
+			<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
+				<h2 class="text-9xl font-impact">
+					HI SCORE {highestScore}
+				</h2>
+			</div>
+		{/if}
+	</div>
+
+	<div class="relative">
 		<Game highestScore={highestScore} score={score} board={board} />
-		<button on:click={togglePause} class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all">
-			{#if playingStatus === "Play"}
-				<Pause size="20" />
-			{:else if playingStatus === "Pause"}
-				<Play size="20" />
-			{:else}
-				<RotateCcw size="20" />
-			{/if}
-		</button>
-	</section>
+		{#if playingStatus === "Pause"}
+			<div class="absolute inset-0 top-6 pt-40 bg-black/10 backdrop-blur-lg">
+				<h1 class="text-4xl text-center font-impact tracking-widest">PAUSED</h1>
+				<button on:click={togglePause} class="mx-auto my-4 flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
+					<Play class="fill-white" size="16" />
+					<span class="uppercase">Resume</span>
+				</button>
+				<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+			</div>
+		{:else if playingStatus === "End"}
+			<div class="absolute inset-0 top-6 pt-40 bg-black/10 backdrop-blur-sm">
+				<h1 class="text-4xl text-center text-red-500 font-impact tracking-widest">YOU DIED</h1>
+				<button on:click={togglePause} class="mx-auto my-4 flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
+					<RotateCcw size="16" />
+					<span class="uppercase">Restart</span>
+				</button>
+				<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+			</div>
+		{/if}
+	</div>
 </div>
 
 <svelte:window on:keydown|preventDefault={onKeyDown} />
+
+<style>
+	:global(body) {
+		@apply bg-neutral-900 text-[#cccccc];
+	}
+</style>

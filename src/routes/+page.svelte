@@ -1,39 +1,45 @@
 <script lang="ts">
 	import "../app.css";
-	import { createCountStore } from "$lib";
-
-	export const count = createCountStore(0, onChange)
-
-	function onChange(value: number) {
-		console.log("count changed to", value)
-	}
 </script>
 
 <svelte:head>
-	<title>Playground</title>
+	<title>log4j Arcade</title>
 </svelte:head>
 
-<div class="max-w-lg mx-auto bg-neutral-200 rounded-xl p-6 shadow-xl grid place-items-center mt-32">
-	<header class="mb-4 flex flex-col items-center">
-		<h1 class="underline uppercase text-xs">count</h1>
-		<span class="text-indigo-500 font-bold text-4xl">
-			{$count}
-		</span>
-	</header>
-	<div class="w-[75%] flex flex-col gap-2">
-		<div class="flex flex-row gap-2">
-			<button class="flex flex-1 justify-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md transition-all" on:click={count.increment}>
-				+
-			</button>
-			<button class="flex flex-1 justify-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md transition-all" on:click={count.decrement}>
-				-
-			</button>
-			<button class="flex flex-1 justify-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md transition-all" on:click={count.square}>
-				√
-			</button>
-		</div>
-		<button class="p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md transition-all" on:click={count.reset}>
-			Reset
-		</button>
+<div class="relative">
+	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
+		Arcade Games
+	</h1>
+	<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-neutral-800 to-neutral-900 bg-clip-text text-transparent">
+		<h2 class="text-9xl font-impact uppercase">
+			log4j.dev
+		</h2>
 	</div>
 </div>
+
+<div class="w-[50%] mx-auto flex flex-row flex-wrap gap-4">
+	<a href="/snake" class="p-2 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all">
+		Snake
+	</a>
+	<a href="/tictactoe" class="p-2 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all">
+		Tic Tac Toe
+	</a>
+	<div class="p-2 px-8 bg-neutral-500 hover:ring ring-red-500 text-neutral-200 rounded-md cursor-not-allowed transition-all">
+		Tetris
+	</div>
+	<div class="p-2 px-8 bg-neutral-500 hover:ring ring-red-500 text-neutral-200 rounded-md cursor-not-allowed transition-all">
+		Pac-Man
+	</div>
+	<div class="p-2 px-8 bg-neutral-500 hover:ring ring-red-500 text-neutral-200 rounded-md cursor-not-allowed transition-all">
+		Space Invaders
+	</div>
+	<div class="p-2 px-8 bg-neutral-500 hover:ring ring-red-500 text-neutral-200 rounded-md cursor-not-allowed transition-all">
+		Pong
+	</div>
+</div>
+
+<style>
+	:global(body) {
+		@apply bg-neutral-900 text-[#cccccc] select-none;
+	}
+</style>

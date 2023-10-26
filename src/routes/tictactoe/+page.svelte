@@ -4,7 +4,7 @@
 	import Icon from "./Icon.svelte";
 	import EmptyCell from "./EmptyCell.svelte";
 	import { tick } from "svelte";
-	import { ChevronDown } from "lucide-svelte";
+	import { ChevronDown, ChevronUp } from "lucide-svelte";
 
 	const focusNextAvailableTile = () => {
 		const nextTile = boardEl.querySelector("button:not(:disabled)");
@@ -56,7 +56,7 @@
 		Tic-Tac-Toe
 	</h1>
 	{#if state === State.Won}
-		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-[#171717] bg-clip-text text-transparent">
+		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
 			<h2 class="text-9xl font-impact">
 				{winner} WON
 			</h2>
@@ -99,7 +99,7 @@
 			{/if}
 		{/if}
 	</div>
-	<div class="w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden" bind:this={boardEl}>
+	<div class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden" bind:this={boardEl}>
 		{#each board as row, r}
 			{#each row as col, c}
 				<div class="h-[100px] p-2 flex justify-center items-center bg-neutral-200 aspect-square">
@@ -115,6 +115,18 @@
 				</div>
 			{/each}
 		{/each}
+		{#if state !== State.Playing}
+			<div class="absolute inset-0 bg-black/10 backdrop-blur-sm">
+				<div class="flex justify-center items-center h-full">
+					<button
+						class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
+						on:click={reset}
+					>
+						Play Again
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
 	<div class="hidden lg:block justify-self-center my-auto relative">
 		{#if state === State.Won}
@@ -169,6 +181,9 @@
 		{/if}
 		{#if state === State.Playing}
 			{#if turn === Move.X}
+				<div class="absolute -top-2 -right-2 rotate-45">
+					<ChevronDown size="30" class="animate-bounce" />
+				</div>
 				<svg xmlns="http://www.w3.org/2000/svg" class="turn" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<path d="M18 6 6 18"/>
 					<path d="m6 6 12 12"/>
@@ -198,6 +213,9 @@
 		{/if}
 		{#if state === State.Playing}
 			{#if turn === Move.O}
+				<div class="absolute -top-2 -left-2 -rotate-45">
+					<ChevronDown size="30" class="animate-bounce" />
+				</div>
 				<svg xmlns="http://www.w3.org/2000/svg" class="turn" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<circle cx="12" cy="12" r="10"/>
 				</svg>
@@ -210,21 +228,9 @@
 	</div>
 </div>
 
-{#if state !== State.Playing}
-	<div class="text-center mt-4">
-		<button
-			class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
-			on:click={reset}
-		>
-			Play Again
-		</button>
-	</div>
-{/if}
-
 <style>
 	:global(body) {
-		background-color: #171717;
-		color: #ccc;
+		@apply bg-neutral-900 text-[#cccccc];
 	}
 
 	.turn {
