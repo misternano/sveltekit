@@ -186,9 +186,9 @@
 		<h1 class="font-impact font-medium text-4xl text-center">
 			Feed <span class="text-xl">the</span> Snake
 		</h1>
-		{#if playingStatus === "End"}
+		{#if playingStatus !== "End"}
 			<div class="-z-10 absolute -top-1/2 md:-translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
-				<h2 class="text-6xl md:text-9xl font-impact">
+				<h2 class="text-7xl md:text-9xl font-impact">
 					HI SCORE {highestScore}
 				</h2>
 			</div>
@@ -209,7 +209,7 @@
 				</div>
 			</div>
 		{:else if playingStatus === "End"}
-			<div class="absolute inset-0 top-6 pt-40 bg-black/10 backdrop-blur-sm">
+			<div class="absolute inset-0 top-6 bg-black/10 backdrop-blur-sm">
 				<div class="h-full flex flex-col gap-4 justify-center items-center">
 					<h1 class="text-4xl text-center text-red-500 font-impact tracking-widest">YOU DIED</h1>
 					<button on:click={togglePause} class="mx-auto flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">

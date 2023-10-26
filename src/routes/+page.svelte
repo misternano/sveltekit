@@ -16,7 +16,7 @@
 		Arcade Games
 	</h1>
 	<div class="-z-10 absolute -top-1/2 md:-translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-neutral-800 to-neutral-900 bg-clip-text text-transparent">
-		<h2 class="text-7xl md:text-9xl font-impact uppercase">
+		<h2 class="text-8xl md:text-9xl font-impact uppercase">
 			log4j.dev
 		</h2>
 	</div>
