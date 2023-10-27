@@ -1,10 +1,10 @@
 <script lang="ts">
 	import "../../app.css";
-	import { Move, checkWinner, State } from "./util";
-	import Icon from "./Icon.svelte";
-	import EmptyCell from "./EmptyCell.svelte";
+	import { Move, checkWinner, State } from "./lib/util";
+	import Icon from "./components/Icon.svelte";
+	import EmptyCell from "./components/EmptyCell.svelte";
 	import { tick } from "svelte";
-	import { ChevronDown, ChevronUp } from "lucide-svelte";
+	import { ChevronDown } from "lucide-svelte";
 
 	const focusNextAvailableTile = () => {
 		const nextTile = boardEl.querySelector("button:not(:disabled)");

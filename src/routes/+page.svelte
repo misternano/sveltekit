@@ -38,9 +38,9 @@
 	<div class="p-2 px-8 bg-neutral-500 hover:ring ring-red-500 text-neutral-200 rounded-md cursor-not-allowed transition-all">
 		Space Invaders
 	</div>
-	<div class="p-2 px-8 bg-neutral-500 hover:ring ring-red-500 text-neutral-200 rounded-md cursor-not-allowed transition-all">
+	<a href="/pong" class="p-2 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all">
 		Pong
-	</div>
+	</a>
 </div>
 
 <style>

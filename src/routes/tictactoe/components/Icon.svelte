@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { X, Circle } from "lucide-svelte";
-	import { Move } from "./util";
+	import { Move } from "../lib/util";
 
 	export let move: Move;
 </script>

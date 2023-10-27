@@ -1,12 +1,12 @@
 <script lang="ts">
 	import "../../app.css";
-	import Game from "./lib/Game.svelte";
-	import { Pause, Play, RotateCcw } from "lucide-svelte";
+	import Game from "./components/Game.svelte";
+	import { Play, RotateCcw } from "lucide-svelte";
 	import { swipe } from "svelte-gestures";
 	import { onMount } from "svelte";
+	import { State } from "./lib/util";
 
-	let playingStatus: "Pause" | "Play" | "End" = "Pause"
-	$: isPlaying = playingStatus === "Play";
+	let state: State = State.Playing;
 	const squareCount = 20;
 
 	let board = new Array(squareCount)
@@ -45,7 +45,7 @@
 	}
 
 	const play = () => {
-		if (isPlaying) {
+		if (state === State.Playing) {
 			let prevHead = [snake[0][0], snake[0][1]];
 			switch(curDir) {
 				case "YD":
@@ -72,7 +72,7 @@
 
 			if (snake.slice(1, snake.length).find(([x, y]) => x == snake[0][0] && y == snake[0][1])) {
 				localStorage.setItem("hiScore", highestScore.toString());
-				playingStatus = "End";
+				state = State.End;
 				return;
 			}
 
@@ -100,10 +100,10 @@
 	}
 
 	const togglePause = () => {
-		if (playingStatus === "Play")
-			playingStatus = "Pause";
-		else if (playingStatus === "Pause")
-			playingStatus = "Play";
+		if (state === State.Playing)
+			state = State.Paused;
+		else if (state === State.Paused)
+			state = State.Playing;
 		else {
 			apple = getAppleCoordinates();
 			board = new Array(squareCount)
@@ -114,14 +114,14 @@
 
 			highestScore = parseInt(localStorage.getItem("hiScore") || "0");
 			score = 0;
-			playingStatus = "Pause";
+			state = State.Paused;
 			drawSnake();
 			play();
 		}
 	}
 
 	const onKeyDown = (e: KeyboardEvent) => {
-		if (isPlaying) {
+		if (state === State.Playing) {
 			switch (e.key) {
 				case "ArrowLeft":
 					if (curDir !== "YD") curDir = "YU";
@@ -163,7 +163,7 @@
 <div
 	use:swipe={{ timeframe: 300, minSwipeDistance: 60 }}
 	on:swipe={(e) => {
-			if (isPlaying) {
+			if (state === State.Playing) {
             switch (e.detail.direction) {
                 case "left":
                     if (curDir !== "YD") curDir = "YU";
@@ -186,7 +186,7 @@
 		<h1 class="font-impact font-medium text-4xl text-center">
 			Feed <span class="text-xl">the</span> Snake
 		</h1>
-		{#if playingStatus === "End"}
+		{#if state === State.End}
 			<div class="-z-10 absolute -top-1/2 md:-translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
 				<h2 class="text-7xl md:text-9xl font-impact">
 					HI SCORE {highestScore}
@@ -197,7 +197,7 @@
 
 	<div class="relative">
 		<Game highestScore={highestScore} score={score} board={board} />
-		{#if playingStatus === "Pause"}
+		{#if state === State.Paused}
 			<div class="absolute inset-0 top-6 bg-black/10 backdrop-blur-lg">
 				<div class="h-full flex flex-col gap-4 justify-center items-center">
 					<h1 class="text-4xl text-center font-impact tracking-widest">PAUSED</h1>
@@ -208,7 +208,7 @@
 					<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
 				</div>
 			</div>
-		{:else if playingStatus === "End"}
+		{:else if state === State.End}
 			<div class="absolute inset-0 top-6 bg-black/10 backdrop-blur-sm">
 				<div class="h-full flex flex-col gap-4 justify-center items-center">
 					<h1 class="text-4xl text-center text-red-500 font-impact tracking-widest">YOU DIED</h1>
