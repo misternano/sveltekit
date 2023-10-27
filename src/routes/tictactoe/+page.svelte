@@ -1,8 +1,7 @@
 <script lang="ts">
 	import "../../app.css";
 	import { Move, checkWinner, State } from "./lib/util";
-	import Icon from "./components/Icon.svelte";
-	import EmptyCell from "./components/EmptyCell.svelte";
+	import { EmptyCell, Icon } from "./components";
 	import { tick } from "svelte";
 	import { ChevronDown } from "lucide-svelte";
 

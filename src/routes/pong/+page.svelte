@@ -2,13 +2,8 @@
 	import "../../app.css";
 	import { onMount } from "svelte";
 	import { State } from "./lib/util";
-	import { player } from "./stores/player";
-	import { robot } from "./stores/robot";
-	import { ball } from "./stores/ball";
-	import { keystate } from "./stores/keystate";
-	import Player from "./components/Player.svelte";
-	import Robot from "./components/Robot.svelte";
-	import Ball from "./components/Ball.svelte";
+	import { player, robot, ball, keystate } from "./stores";
+	import { Ball, Player, Robot } from "./components";
 
 	let state: State = State.Paused
 
@@ -54,7 +49,7 @@
 	}
 </script>
 
-<div class="flex justify-center items-center w-full h-full bg-sky-900">
+<div class="flex justify-center items-center w-full h-full bg-sky-500">
 	<div class="w-full h-full bg-white">
 		<Robot pos_x={$robot.pos_x} alive={$robot.alive} />
 		<Ball pos_x={$ball.pos_x} pos_y={$ball.pos_y} alive={$ball.alive} />
@@ -64,8 +59,7 @@
 
 <style>
 	:global(body) {
-		background-color: #171717;
-		overflow: hidden;
+		@apply bg-neutral-900 text-[#cccccc] overflow-hidden;
 	}
 </style>
 

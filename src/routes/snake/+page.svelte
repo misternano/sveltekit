@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "../../app.css";
-	import Game from "./components/Game.svelte";
+	import { Game } from "./components";
 	import { Play, RotateCcw } from "lucide-svelte";
 	import { swipe } from "svelte-gestures";
 	import { onMount } from "svelte";
