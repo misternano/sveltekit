@@ -1,12 +1,101 @@
 <script lang="ts">
-	import { SIZE, createEmptyBoard } from './lib/util';
-	import type { Board } from './lib/util';
-	import { Pencil } from "lucide-svelte";
+	import { SIZE, generatePuzzleBoard } from './lib/util'
+	import type { Board } from './lib/util'
+	import { Selector } from "./components";
 
-	let board: Board = createEmptyBoard()
+	let board: Board = generatePuzzleBoard()
 	let selectedRow: number | null = null
 	let selectedCol: number | null = null
 	let noteMode = false
+	let conflictSet: Set<string> = new Set()
+	let hasWon = false
+
+	function cellKey(r: number, c: number) {
+		return `${r}-${c}`
+	}
+
+	function computeConflicts(b: Board): Set<string> {
+		const conflicts = new Set<string>()
+
+		for (let r = 0; r < SIZE; r++) {
+			const seen: Record<number, [number, number][]> = {}
+			for (let c = 0; c < SIZE; c++) {
+				const v = b[r][c].value
+				if (v === null) continue
+				if (!seen[v]) seen[v] = []
+				seen[v].push([r, c])
+			}
+			for (const v in seen) {
+				if (seen[v].length > 1) {
+					for (const [rr, cc] of seen[v]) {
+						conflicts.add(cellKey(rr, cc))
+					}
+				}
+			}
+		}
+
+		for (let c = 0; c < SIZE; c++) {
+			const seen: Record<number, [number, number][]> = {}
+			for (let r = 0; r < SIZE; r++) {
+				const v = b[r][c].value
+				if (v === null) continue
+				if (!seen[v]) seen[v] = []
+				seen[v].push([r, c])
+			}
+			for (const v in seen) {
+				if (seen[v].length > 1) {
+					for (const [rr, cc] of seen[v]) {
+						conflicts.add(cellKey(rr, cc))
+					}
+				}
+			}
+		}
+
+		for (let br = 0; br < 3; br++) {
+			for (let bc = 0; bc < 3; bc++) {
+				const seen: Record<number, [number, number][]> = {}
+				const startR = br * 3
+				const startC = bc * 3
+				for (let r = startR; r < startR + 3; r++) {
+					for (let c = startC; c < startC + 3; c++) {
+						const v = b[r][c].value
+						if (v === null) continue
+						if (!seen[v]) seen[v] = []
+						seen[v].push([r, c])
+					}
+				}
+				for (const v in seen) {
+					if (seen[v].length > 1) {
+						for (const [rr, cc] of seen[v]) {
+							conflicts.add(cellKey(rr, cc))
+						}
+					}
+				}
+			}
+		}
+
+		return conflicts
+	}
+
+	function isBoardComplete(b: Board) {
+		for (let r = 0; r < SIZE; r++) {
+			for (let c = 0; c < SIZE; c++) {
+				if (b[r][c].value === null) return false
+			}
+		}
+		return true
+	}
+
+	function newGame() {
+		board = generatePuzzleBoard()
+		selectedRow = null
+		selectedCol = null
+		noteMode = false
+		hasWon = false
+	}
+
+	$: conflictSet = computeConflicts(board)
+	$: hasWon = isBoardComplete(board) && conflictSet.size === 0
 
 	function selectCell(r: number, c: number) {
 		if (board[r][c].fixed) return
@@ -97,49 +186,60 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col items-center gap-6 p-4" tabindex="0" on:keydown={handleKeydown} role="application">
-	<h1 class="text-2xl font-semibold">Sudoku</h1>
+<svelte:window on:keydown={handleKeydown} />
 
-	<div class="grid grid-cols-9 gap-[1px] bg-neutral-400">
-		{#each board as row, r}
-			{#each row as cell, c}
-				<button
-					type="button"
-					class={`relative flex h-12 w-12 items-center justify-center bg-white text-lg
-            border border-neutral-300
-            ${r % 3 === 2 && r !== SIZE - 1 ? 'border-b-2 border-b-black' : ''}
-            ${c % 3 === 2 && c !== SIZE - 1 ? 'border-r-2 border-r-black' : ''}
-            ${selectedRow === r && selectedCol === c ? 'ring-2 ring-blue-500' : ''}
-            ${cell.fixed ? 'bg-neutral-100 font-semibold' : ''}
-          `}
-					on:click={() => selectCell(r, c)}
-				>
-					{#if cell.value !== null}
-						<span>{cell.value}</span>
-					{:else if cell.notes.length > 0}
-						<div class="grid grid-cols-3 gap-[1px] text-[0.55rem] leading-none">
-							{#each Array(9) as _, i}
-                <span class="h-3 w-3 text-center">
-                  {cell.notes.includes(i + 1) ? i + 1 : ''}
-                </span>
-							{/each}
-						</div>
-					{/if}
-				</button>
+<div class="relative">
+	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
+		Sudoku
+	</h1>
+	{#if hasWon}
+		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
+			<h2 class="text-9xl font-impact">
+				VICTORY
+			</h2>
+		</div>
+	{/if}
+</div>
+
+<div>
+	<div class="flex flex-col items-center gap-6">
+		<div class="grid grid-cols-9">
+			{#each board as row, r}
+				{#each row as cell, c}
+					<button
+						type="button"
+						class={`relative flex h-12 w-12 items-center justify-center text-black text-xl font-medium border border-neutral-300
+                            ${r % 3 === 2 && r !== SIZE - 1 ? 'border-b-2 border-b-black' : ''}
+                            ${c % 3 === 2 && c !== SIZE - 1 ? 'border-r-2 border-r-black' : ''}
+                            ${
+                            conflictSet.has(cellKey(r, c))
+                            ? 'bg-red-300'
+                            : selectedRow === r && selectedCol === c
+                            ? 'bg-indigo-100'
+                            : cell.fixed
+                            ? 'bg-neutral-400/90'
+                            : 'bg-neutral-400'
+                            }
+                            ${cell.fixed ? 'font-semibold' : ''}
+						`}
+						on:click={() => selectCell(r, c)}
+					>
+						{#if cell.value !== null}
+							<span>{cell.value}</span>
+						{:else if cell.notes.length > 0}
+							<div class="grid grid-cols-3 gap-[1px] text-[0.55rem] leading-none">
+								{#each Array(9) as _, i}
+                                    <span class="h-3 w-3 text-center">
+                                      {cell.notes.includes(i + 1) ? i + 1 : ''}
+                                    </span>
+								{/each}
+							</div>
+						{/if}
+					</button>
+				{/each}
 			{/each}
-		{/each}
+		</div>
 	</div>
 
-	<div class="flex flex-wrap justify-center gap-2">
-		{#each Array(9) as _, i}
-			<button
-				type="button"
-				class="h-10 w-10 rounded-md border border-neutral-300 text-lg font-medium shadow-sm hover:bg-neutral-100"
-				on:click={() => handleNumberButtonClick(i + 1)}
-			>
-				{i + 1}
-			</button>
-		{/each}
-		<button type="button" class="h-10 w-10 flex justify-center items-center rounded-md border border-neutral-300 text-lg font-medium shadow-sm hover:bg-neutral-100" on:click={toggleNoteMode}> <Pencil size="16" /> </button>
-	</div>
+	<Selector noteMode={noteMode} toggleNoteMode={toggleNoteMode} onNumberSelect={handleNumberButtonClick} />
 </div>

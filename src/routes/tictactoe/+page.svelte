@@ -103,7 +103,7 @@
 	<div class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden" bind:this={boardEl}>
 		{#each board as row, r}
 			{#each row as col, c}
-				<div class="h-[100px] p-2 flex justify-center items-center bg-neutral-200 aspect-square">
+				<div class="h-[100px] p-2 flex justify-center items-center bg-neutral-400 aspect-square">
 					{#if col !== Move.Empty}
 						<Icon move={col} />
 					{:else if state === State.Playing}
