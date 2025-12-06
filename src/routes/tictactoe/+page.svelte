@@ -5,6 +5,9 @@
 	import { tick } from "svelte";
 	import { ChevronDown } from "lucide-svelte";
 
+	let boardEl: HTMLElement;
+	let statusEl: HTMLElement;
+
 	const focusNextAvailableTile = () => {
 		const nextTile = boardEl.querySelector("button:not(:disabled)");
 		if (nextTile)
@@ -44,7 +47,6 @@
 	let board: Move[][] = getEmptyBoard();
 	let turn: Move = Move.O;
 	let state: State = State.Playing;
-	let boardEl: HTMLElement, statusEl: HTMLElement;
 
 	$: winner = checkWinner(board);
 	$: state = getGameState(winner, board);
