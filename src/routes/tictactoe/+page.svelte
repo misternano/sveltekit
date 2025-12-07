@@ -2,8 +2,20 @@
 	import "../../app.css";
 	import { Move, checkWinner, State } from "./lib/util";
 	import { EmptyCell, Icon } from "./components";
-	import { tick } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { ChevronDown } from "lucide-svelte";
+
+	onMount(() => {
+		localStorage.setItem(
+			"bkclb_arcade_last_game",
+			JSON.stringify({
+				id: "tictactoe",
+				name: "Tic-Tac-Toe",
+				path: "/tictactoe",
+				updatedAt: Date.now()
+			})
+		)
+	})
 
 	let boardEl: HTMLElement;
 	let statusEl: HTMLElement;
@@ -52,7 +64,7 @@
 	$: state = getGameState(winner, board);
 </script>
 
-<div class="relative">
+<header class="relative">
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		Tic-Tac-Toe
 	</h1>
@@ -63,7 +75,14 @@
 			</h2>
 		</div>
 	{/if}
-</div>
+	{#if state === State.Draw}
+		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-neutral-500/75 to-neutral-900 bg-clip-text text-transparent">
+			<h2 class="text-9xl font-impact">
+				DRAW
+			</h2>
+		</div>
+	{/if}
+</header>
 
 <div class="grid lg:grid-cols-3">
 	<div class="hidden lg:block justify-self-center my-auto relative">
@@ -82,6 +101,12 @@
 					<path d="m6 6 12 12"/>
 				</svg>
 			{/if}
+		{/if}
+		{#if state === State.Draw}
+			<svg xmlns="http://www.w3.org/2000/svg" class="loser" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M18 6 6 18"/>
+				<path d="m6 6 12 12"/>
+			</svg>
 		{/if}
 		{#if state === State.Playing}
 			{#if turn === Move.X}
@@ -143,6 +168,11 @@
 					<circle cx="12" cy="12" r="10"/>
 				</svg>
 			{/if}
+		{/if}
+		{#if state === State.Draw}
+			<svg xmlns="http://www.w3.org/2000/svg" class="loser" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="12" cy="12" r="10"/>
+			</svg>
 		{/if}
 		{#if state === State.Playing}
 			{#if turn === Move.O}

@@ -6,6 +6,18 @@
 	import { onMount } from "svelte";
 	import { State } from "./lib/util";
 
+	onMount(() => {
+		localStorage.setItem(
+			"bkclb_arcade_last_game",
+			JSON.stringify({
+				id: "snake",
+				name: "Snake",
+				path: "/snake",
+				updatedAt: Date.now()
+			})
+		)
+	})
+
 	let state: State = State.Playing;
 	const squareCount = 20;
 
@@ -160,6 +172,8 @@
 	})
 </script>
 
+<svelte:window on:keydown|preventDefault={onKeyDown} />
+
 <div
 	use:swipe={{ timeframe: 300, minSwipeDistance: 60 }}
 	on:swipe={(e) => {
@@ -182,7 +196,7 @@
 		}}
 	class="m-8 flex flex-col items-center"
 >
-	<div class="w-full relative my-4">
+	<header class="w-full relative my-4">
 		<h1 class="font-impact font-medium text-4xl text-center">
 			Feed <span class="text-xl">the</span> Snake
 		</h1>
@@ -193,7 +207,7 @@
 				</h2>
 			</div>
 		{/if}
-	</div>
+	</header>
 
 	<div class="relative">
 		<Game highestScore={highestScore} score={score} board={board} />
@@ -222,8 +236,6 @@
 		{/if}
 	</div>
 </div>
-
-<svelte:window on:keydown|preventDefault={onKeyDown} />
 
 <style>
 	:global(body) {

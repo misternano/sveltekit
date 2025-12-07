@@ -1,7 +1,20 @@
 <script lang="ts">
-	import { SIZE, generatePuzzleBoard } from './lib/util'
-	import type { Board } from './lib/util'
+	import { SIZE, generatePuzzleBoard } from "./lib/util"
+	import type { Board } from "./lib/util"
 	import { Selector } from "./components";
+	import { onMount } from "svelte";
+
+	onMount(() => {
+		localStorage.setItem(
+			"bkclb_arcade_last_game",
+			JSON.stringify({
+				id: "sudoku",
+				name: "Sudoku",
+				path: "/sudoku",
+				updatedAt: Date.now()
+			})
+		)
+	})
 
 	let board: Board = generatePuzzleBoard()
 	let selectedRow: number | null = null
@@ -143,28 +156,28 @@
 		}
 		let r = selectedRow
 		let c = selectedCol
-		if (key === 'ArrowUp') r = (r + SIZE - 1) % SIZE
-		if (key === 'ArrowDown') r = (r + 1) % SIZE
-		if (key === 'ArrowLeft') c = (c + SIZE - 1) % SIZE
-		if (key === 'ArrowRight') c = (c + 1) % SIZE
+		if (key === "ArrowUp") r = (r + SIZE - 1) % SIZE
+		if (key === "ArrowDown") r = (r + 1) % SIZE
+		if (key === "ArrowLeft") c = (c + SIZE - 1) % SIZE
+		if (key === "ArrowRight") c = (c + 1) % SIZE
 		selectedRow = r
 		selectedCol = c
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === ' ') {
+		if (e.key === " ") {
 			e.preventDefault()
 			noteMode = !noteMode
 			return
 		}
 
-		if (e.key === 'Backspace' || e.key === 'Delete') {
+		if (e.key === "Backspace" || e.key === "Delete") {
 			e.preventDefault()
 			clearCell()
 			return
 		}
 
-		if (e.key.startsWith('Arrow')) {
+		if (e.key.startsWith("Arrow")) {
 			e.preventDefault()
 			handleArrow(e.key)
 			return
@@ -184,11 +197,16 @@
 	function toggleNoteMode() {
 		noteMode = !noteMode
 	}
+
+	function clearSelection() {
+		selectedRow = null
+		selectedCol = null
+	}
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="relative">
+<header class="relative">
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		Sudoku
 	</h1>
@@ -199,47 +217,50 @@
 			</h2>
 		</div>
 	{/if}
-</div>
+</header>
 
-<div>
-	<div class="flex flex-col items-center gap-6">
-		<div class="grid grid-cols-9">
-			{#each board as row, r}
-				{#each row as cell, c}
-					<button
-						type="button"
-						class={`relative flex h-12 w-12 items-center justify-center text-black text-xl font-medium border border-neutral-300
-                            ${r % 3 === 2 && r !== SIZE - 1 ? 'border-b-2 border-b-black' : ''}
-                            ${c % 3 === 2 && c !== SIZE - 1 ? 'border-r-2 border-r-black' : ''}
-                            ${
-                            conflictSet.has(cellKey(r, c))
-                            ? 'bg-red-300'
-                            : selectedRow === r && selectedCol === c
-                            ? 'bg-indigo-100'
-                            : cell.fixed
-                            ? 'bg-neutral-400/90'
-                            : 'bg-neutral-400'
-                            }
-                            ${cell.fixed ? 'font-semibold' : ''}
-						`}
-						on:click={() => selectCell(r, c)}
-					>
-						{#if cell.value !== null}
-							<span>{cell.value}</span>
-						{:else if cell.notes.length > 0}
-							<div class="grid grid-cols-3 gap-[1px] text-[0.55rem] leading-none">
-								{#each Array(9) as _, i}
-                                    <span class="h-3 w-3 text-center">
-                                      {cell.notes.includes(i + 1) ? i + 1 : ''}
-                                    </span>
-								{/each}
-							</div>
-						{/if}
-					</button>
-				{/each}
+<div class="flex flex-col items-center gap-6" role="button" tabindex="0" on:click={clearSelection} on:keydown={(e) => (e.key === "Escape" || e.key === "Enter") && clearSelection()}>
+	<div class="grid grid-cols-9">
+		{#each board as row, r}
+			{#each row as cell, c}
+				<button
+					type="button"
+					class={`relative h-16 w-16 flex items-center justify-center text-black text-3xl font-medium border border-neutral-300 group focus:outline-none focus:ring-0 focus-visible:ring-0
+						${r % 3 === 2 && r !== SIZE - 1 ? "border-b-2 border-b-black" : ""}
+						${c % 3 === 2 && c !== SIZE - 1 ? "border-r-2 border-r-black" : ""}
+						${conflictSet.has(cellKey(r, c))
+							? "bg-red-300"
+							: cell.fixed
+							? "bg-neutral-400/90"
+							: "bg-neutral-400"}`}
+					on:click|stopPropagation={() => selectCell(r, c)}
+					disabled={cell.fixed}
+				>
+					{#if !cell.fixed}
+						<div
+							class={`pointer-events-none absolute inset-[3px] rounded-md
+								${selectedRow === r && selectedCol === c
+									? "bg-slate-500/80 border border-slate-800/50 shadow-lg"
+									: "group-hover:bg-slate-500/50 group-hover:shadow-lg group-hover:border group-hover:border-slate-800/50 group-hover:animate-pulse group-focus-visible:bg-slate-500/50 group-focus-visible:shadow-lg group-focus-visible:border group-focus-visible:border-slate-800/50"}`}
+						/>
+					{/if}
+
+					{#if cell.value !== null}
+						<span class="relative z-10">{cell.value}</span>
+					{:else if cell.notes.length > 0}
+						<div class="relative z-10 grid grid-cols-3 gap-[1px] text-[0.55rem] leading-none">
+							{#each Array(9) as _, i}
+								<span class="h-3 w-3 text-center font-bold">
+									{cell.notes.includes(i + 1) ? i + 1 : ""}
+								</span>
+							{/each}
+						</div>
+					{/if}
+				</button>
+
 			{/each}
-		</div>
+		{/each}
 	</div>
-
-	<Selector noteMode={noteMode} toggleNoteMode={toggleNoteMode} onNumberSelect={handleNumberButtonClick} />
 </div>
+
+<Selector noteMode={noteMode} toggleNoteMode={toggleNoteMode} onNumberSelect={handleNumberButtonClick} />
