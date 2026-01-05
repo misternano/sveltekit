@@ -1,7 +1,7 @@
 <script lang="ts">
+	import "../app.css";
 	import { onMount } from "svelte"
-	import { Sparkles, Clock, Zap, RotateCcw } from "lucide-svelte"
-	import { NavBarGames } from "./components"
+	import { Sparkles, Clock, RotateCcw } from "lucide-svelte"
 
 	type GameId = "sudoku" | "tictactoe" | "snake"
 
@@ -73,21 +73,11 @@
 	})
 </script>
 
-<nav class="absolute top-0 left-5">
-	<div class="flex flex-row gap-6">
-		<a href="/" class="flex flex-row gap-2 items-center px-3 bg-indigo-500 ring ring-indigo-300 text-white rounded-md rounded-t-none hover:scale-105 transition-all">
-			<Zap size="16" class="fill-[#ecba16] stroke-[#ecba16]" />
-			<span class="text-md">BKCLB</span>
-		</a>
-		<NavBarGames />
-	</div>
-</nav>
-
 <main class="min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16">
 	<section class="flex flex-col items-center text-center gap-4 mb-12">
 		<div class="flex items-center gap-3 text-indigo-300 uppercase tracking-[0.25em] text-xs">
 			<Sparkles size="16" />
-			<span>Made with ❤️ by nanos.club</span>
+			<span>YAY</span>
 			<Sparkles size="16" />
 		</div>
 		<h1 class="relative font-impact text-6xl sm:text-7xl md:text-8xl tracking-wide bg-gradient-to-b from-white to-neutral-500 bg-clip-text text-transparent">

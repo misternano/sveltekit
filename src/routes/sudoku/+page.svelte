@@ -220,12 +220,13 @@
 </header>
 
 <div class="flex flex-col items-center gap-6" role="button" tabindex="0" on:click={clearSelection} on:keydown={(e) => (e.key === "Escape" || e.key === "Enter") && clearSelection()}>
-	<div class="grid grid-cols-9">
-		{#each board as row, r}
-			{#each row as cell, c}
-				<button
-					type="button"
-					class={`relative h-16 w-16 flex items-center justify-center text-black text-3xl font-medium border border-neutral-300 group focus:outline-none focus:ring-0 focus-visible:ring-0
+	<div class="max-w-[90vw] w-[90vw] aspect-square md:w-auto md:max-w-none">
+		<div class="grid grid-cols-9">
+			{#each board as row, r}
+				{#each row as cell, c}
+					<button
+						type="button"
+						class={`relative h-full w-auto aspect-square md:h-16 md:w-16 flex items-center justify-center text-black text-xl md:text-3xl font-medium border border-neutral-300 group focus:outline-none focus:ring-0 focus-visible:ring-0
 						${r % 3 === 2 && r !== SIZE - 1 ? "border-b-2 border-b-black" : ""}
 						${c % 3 === 2 && c !== SIZE - 1 ? "border-r-2 border-r-black" : ""}
 						${conflictSet.has(cellKey(r, c))
@@ -233,33 +234,34 @@
 							: cell.fixed
 							? "bg-neutral-400/90"
 							: "bg-neutral-400"}`}
-					on:click|stopPropagation={() => selectCell(r, c)}
-					disabled={cell.fixed}
-				>
-					{#if !cell.fixed}
-						<div
-							class={`pointer-events-none absolute inset-[3px] rounded-md
+						on:click|stopPropagation={() => selectCell(r, c)}
+						disabled={cell.fixed}
+					>
+						{#if !cell.fixed}
+							<div
+								class={`pointer-events-none absolute inset-[3px] rounded-md
 								${selectedRow === r && selectedCol === c
 									? "bg-slate-500/80 border border-slate-800/50 shadow-lg"
 									: "group-hover:bg-slate-500/50 group-hover:shadow-lg group-hover:border group-hover:border-slate-800/50 group-hover:animate-pulse group-focus-visible:bg-slate-500/50 group-focus-visible:shadow-lg group-focus-visible:border group-focus-visible:border-slate-800/50"}`}
-						/>
-					{/if}
+							/>
+						{/if}
 
-					{#if cell.value !== null}
-						<span class="relative z-10">{cell.value}</span>
-					{:else if cell.notes.length > 0}
-						<div class="relative z-10 grid grid-cols-3 gap-[1px] text-[0.55rem] leading-none">
-							{#each Array(9) as _, i}
+						{#if cell.value !== null}
+							<span class="relative z-10">{cell.value}</span>
+						{:else if cell.notes.length > 0}
+							<div class="relative z-10 grid grid-cols-3 gap-[1px] text-[0.55rem] leading-none">
+								{#each Array(9) as _, i}
 								<span class="h-3 w-3 text-center font-bold">
 									{cell.notes.includes(i + 1) ? i + 1 : ""}
 								</span>
-							{/each}
-						</div>
-					{/if}
-				</button>
+								{/each}
+							</div>
+						{/if}
+					</button>
 
+				{/each}
 			{/each}
-		{/each}
+		</div>
 	</div>
 </div>
 

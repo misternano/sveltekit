@@ -1,5 +1,4 @@
 <script lang="ts">
-	import "../../app.css";
 	import { Game } from "./components";
 	import { Play, RotateCcw } from "lucide-svelte";
 	import { swipe } from "svelte-gestures";
@@ -196,7 +195,7 @@
 		}}
 	class="m-8 flex flex-col items-center"
 >
-	<header class="w-full relative my-4">
+	<header class="w-full relative my-16">
 		<h1 class="font-impact font-medium text-4xl text-center">
 			Feed <span class="text-xl">the</span> Snake
 		</h1>
@@ -210,33 +209,26 @@
 	</header>
 
 	<div class="relative">
-		<Game highestScore={highestScore} score={score} board={board} />
-		{#if state === State.Paused}
-			<div class="absolute inset-0 top-6 bg-black/10 backdrop-blur-lg">
+		<Game highestScore={highestScore} score={score} board={board} headX={snake[0][0]} headY={snake[0][1]} />
+		{#if state === State.Paused || state === State.End}
+			<div class="absolute inset-0 top-6 bg-black/50">
 				<div class="h-full flex flex-col gap-4 justify-center items-center">
-					<h1 class="text-4xl text-center font-impact tracking-widest">PAUSED</h1>
+					<h1 class="text-4xl text-center font-impact tracking-widest">{state === State.Paused ? "PAUSED" : "YOU DIED"}</h1>
 					<button on:click={togglePause} class="mx-auto flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
-						<Play class="fill-white" size="16" />
-						<span class="uppercase">Resume</span>
+						{#if state === State.Paused}
+							<Play class="fill-white" size="16" />
+						{:else}
+							<RotateCcw size="16" />
+						{/if}
+						<span class="uppercase">{state === State.Paused ? "Resume" : "Restart"}</span>
 					</button>
-					<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
-				</div>
-			</div>
-		{:else if state === State.End}
-			<div class="absolute inset-0 top-6 bg-black/10 backdrop-blur-sm">
-				<div class="h-full flex flex-col gap-4 justify-center items-center">
-					<h1 class="text-4xl text-center text-red-500 font-impact tracking-widest">YOU DIED</h1>
-					<button on:click={togglePause} class="mx-auto flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
-						<RotateCcw size="16" />
-						<span class="uppercase">Restart</span>
-					</button>
-					<p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p>
+					<div class="hidden md:block"><p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p></div>
 				</div>
 			</div>
 		{/if}
 	</div>
+	<button on:click={togglePause} class={`${state === State.Paused && "hidden"} mx-auto mt-6 flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all`}>Pause</button>
 </div>
-
 <style>
 	:global(body) {
 		@apply bg-neutral-900 text-[#cccccc];

@@ -6,11 +6,11 @@
 	export let onNumberSelect: (n: number) => void
 </script>
 
-<div class="flex flex-wrap justify-center gap-2 mt-6 font-anton">
+<div class="max-w-[90vw] mx-auto flex flex-wrap justify-center gap-2 mt-6 font-anton">
 	{#each Array(9) as _, i}
 		<button
 			type="button"
-			class="p-2 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-2xl text-white rounded-md active:scale-95 transition-all"
+			class="p-2 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-lg md:text-2xl text-white rounded-md active:scale-95 transition-all"
 			on:click={() => onNumberSelect(i + 1)}
 		>
 			{i + 1}
