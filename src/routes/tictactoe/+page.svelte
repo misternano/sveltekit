@@ -12,12 +12,12 @@
 	})
 
 	let boardEl: HTMLElement
-	let statusEl: HTMLElement
+	let statusEl: HTMLElement | undefined
 
 	const focusNextAvailableTile = () => {
 		const nextTile = boardEl.querySelector("button:not(:disabled)")
 		if (nextTile) (nextTile as HTMLElement).focus()
-		else statusEl?.focus()
+		else statusEl?.focus?.()
 	}
 
 	const getEmptyBoard = () => [
@@ -57,7 +57,7 @@
 	const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6)
 
 	const generateRoomCode = (len = 6) => {
-		const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+		const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"
 		const bytes = new Uint8Array(len)
 		crypto.getRandomValues(bytes)
 		let out = ""
@@ -84,6 +84,7 @@
 
 		socket.addEventListener("message", (ev) => {
 			const msg = JSON.parse(String((ev as MessageEvent).data))
+			console.log("ws: ", msg)
 
 			if (msg.type === "joined") {
 				roomCode = msg.code
@@ -170,12 +171,13 @@
 	const sendMove = async (row: number, col: number) => {
 		if (!roomCode) return
 		try {
-			await sendJson({ type: "make_move", row, col })
+			await sendJson({ type: "move", row, col })
 			tick().then(focusNextAvailableTile)
 		} catch {
 			error = "Could not send move"
 		}
 	}
+
 
 	const sendReset = async () => {
 		if (!roomCode) return
@@ -193,6 +195,7 @@
 
 	$: me = youAre ? players.find((p) => p.mark === youAre)?.name ?? userName : userName
 	$: opponent = youAre ? players.find((p) => p.mark !== youAre)?.name : undefined
+	$: yourTurn = roomCode && youAre && ((turn === Move.X && youAre === "X") || (turn === Move.O && youAre === "O"))
 </script>
 
 
@@ -256,9 +259,9 @@
 					{#if col !== Move.Empty}
 						<Icon move={col} />
 					{:else if state === State.Playing}
-						{#if !roomCode || (youAre && youAre === turn)}
+						{#if !roomCode || yourTurn}
 							<EmptyCell on:click={() => sendMove(r, c)}>
-								<span class="hidden">Place row {r + 1} column {c + 1}</span>
+								<span class="hidden">ROW {r + 1} :: COL {c + 1}</span>
 							</EmptyCell>
 						{:else}
 							<button disabled class="w-full h-full opacity-60 cursor-not-allowed" />
@@ -318,23 +321,32 @@
 
 <div class="w-[50%] mx-auto mt-10 flex flex-col gap-3">
 	<div class="flex flex-col flex-wrap items-center gap-3">
-		<div class="flex flex-row gap-2 text-sm text-neutral-300">
+		<div class="flex flex-row gap-1 text-sm text-neutral-300">
 			<div class="font-semibold">{me}</div>
 			<div class="text-neutral-400">{opponent ? `vs ${opponent}` : "Waiting for opponent…"}</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-2">
 			<button
-				class={`${roomCode && "hidden"} flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-indigo-500 text-white ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60`}
-				on:click|preventDefault={createRoom}
+				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+				on:click|preventDefault={async () => {
+					if (!roomCode) {
+						await createRoom()
+					} else {
+						await navigator.clipboard.writeText(roomCode)
+					}
+				}}
 				disabled={!connected && ws?.readyState === WebSocket.CONNECTING}
 			>
-				{#if ws?.readyState === WebSocket.CONNECTING}<Loader size="16" class="animate-spin" />{/if} Create Room
+				{#if roomCode}
+					<span class="tracking-[0.25em] uppercase font-mono">{roomCode}</span>
+				{:else}
+					{#if ws?.readyState === WebSocket.CONNECTING}
+						<Loader size="16" class="animate-spin" />
+					{/if}
+					Create Room
+				{/if}
 			</button>
-			<div class="flex items-center gap-2">
-				<div class="px-3 py-2 rounded-md bg-neutral-800 ring-1 ring-neutral-700 text-neutral-200 tracking-[0.25em] uppercase font-mono">
-					{roomCode || "------"}
-				</div>
-
+			<div class={`${roomCode && "hidden"} flex items-center gap-2`}>
 				<input
 					class="w-44 px-3 py-2 rounded-md bg-neutral-800 text-white outline-none ring-1 ring-neutral-700 focus:ring-2 focus:ring-indigo-400 tracking-[0.35em] text-center uppercase"
 					placeholder="JOIN"
@@ -345,9 +357,8 @@
 					autocapitalize="characters"
 					spellcheck={false}
 				/>
-
 				<button
-					class="px-4 py-2 rounded-md bg-neutral-700 text-white ring-1 ring-neutral-600 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+					class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 					on:click={joinRoom}
 					disabled={joinCode.length !== 6}
 				>
