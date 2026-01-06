@@ -10,15 +10,16 @@
 			"bkclb_arcade_last_game",
 			JSON.stringify({ id: "tictactoe", name: "Tic-Tac-Toe", path: "/tictactoe", updatedAt: Date.now() })
 		)
-		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:rem;width:100%;")
 	})
 
 	let boardEl: HTMLElement
 	let statusEl: HTMLElement | undefined
 
 	const focusNextAvailableTile = () => {
-		const nextTile = boardEl?.querySelector?.("button:not(:disabled)")
-		if (nextTile) (nextTile as HTMLElement).focus()
+		const nextTile = boardEl?.querySelector?.(
+			"button[aria-disabled='false'],button:not([aria-disabled])"
+		) as HTMLElement | null
+		if (nextTile) nextTile.focus()
 		else statusEl?.focus?.()
 	}
 
@@ -37,6 +38,8 @@
 	let board: Move[][] = getEmptyBoard()
 	let turn: Move = Move.O
 	let state: State = State.Playing
+	let pendingFocus = false
+
 	$: winner = checkWinner(board)
 	$: state = getGameState(winner, board)
 
@@ -53,11 +56,9 @@
 	let roomCode = ""
 	let joinCode = ""
 	let youAre: "X" | "O" | undefined
+	let youId: string | undefined
 	let error = ""
 	let connected = false
-
-	// Focus only after server-driven DOM update arrives.
-	let pendingFocus = false
 
 	const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6)
 
@@ -70,14 +71,91 @@
 		return out
 	}
 
-	const safeParse = (data: unknown): any | null => {
-		try {
-			return JSON.parse(String(data))
-		} catch {
-			return null
-		}
+	// ----------------------------
+	// Cursor tracking (opponent)
+	// ----------------------------
+	type CursorMsg = {
+		type: "cursor"
+		id: string
+		name: string
+		mark: "X" | "O"
+		x: number // 0..1
+		y: number // 0..1
+		ts: number
 	}
 
+	type CursorLeaveMsg = {
+		type: "cursor_leave"
+		id: string
+		ts: number
+	}
+
+	let opponentCursor: CursorMsg | null = null
+	let staleTimer: ReturnType<typeof setTimeout> | null = null
+
+	const setOpponentCursor = (m: CursorMsg) => {
+		opponentCursor = m
+		if (staleTimer) clearTimeout(staleTimer)
+		staleTimer = setTimeout(() => {
+			if (opponentCursor && Date.now() - opponentCursor.ts > 1500) opponentCursor = null
+		}, 1600)
+	}
+
+	const clearOpponentCursor = (id?: string) => {
+		if (!opponentCursor) return
+		if (!id || opponentCursor.id === id) opponentCursor = null
+	}
+
+	const canSendCursor = () =>
+		Boolean(ws && ws.readyState === WebSocket.OPEN && roomCode && youAre && state === State.Playing)
+
+	let raf = 0
+	let lastCursor = { x: 0, y: 0 }
+
+	const sendCursor = () => {
+		if (!canSendCursor()) return
+		if (raf) return
+		raf = requestAnimationFrame(() => {
+			raf = 0
+			try {
+				ws?.send(JSON.stringify({ type: "cursor", x: lastCursor.x, y: lastCursor.y }))
+			} catch {}
+		})
+	}
+
+	const sendCursorLeave = () => {
+		if (!ws || ws.readyState !== WebSocket.OPEN) return
+		if (!roomCode) return
+		try {
+			ws.send(JSON.stringify({ type: "cursor_leave" }))
+		} catch {}
+	}
+
+	const onBoardPointerMove = (e: PointerEvent) => {
+		if (!canSendCursor()) return
+		if (!boardEl) return
+		const rect = boardEl.getBoundingClientRect()
+		if (rect.width <= 0 || rect.height <= 0) return
+		const nx = (e.clientX - rect.left) / rect.width
+		const ny = (e.clientY - rect.top) / rect.height
+		lastCursor.x = Math.min(1, Math.max(0, nx))
+		lastCursor.y = Math.min(1, Math.max(0, ny))
+		sendCursor()
+	}
+
+	const onBoardPointerLeave = () => {
+		sendCursorLeave()
+	}
+
+	const cursorDotClass = (mark: "X" | "O") =>
+		mark === "X" ? "bg-rose-400 shadow-rose-400/60" : "bg-emerald-400 shadow-emerald-400/60"
+
+	const cursorBadgeClass = (mark: "X" | "O") =>
+		mark === "X" ? "bg-rose-500/80 ring-rose-300/50" : "bg-emerald-500/80 ring-emerald-300/50"
+
+	// ----------------------------
+	// WebSocket
+	// ----------------------------
 	const attachHandlers = (socket: WebSocket) => {
 		socket.addEventListener("open", () => {
 			connected = true
@@ -87,9 +165,9 @@
 		socket.addEventListener("close", () => {
 			connected = false
 			youAre = undefined
+			youId = undefined
 			players = []
-			// keep roomCode so UI still shows copied code; wipe if you prefer:
-			// roomCode = ""
+			opponentCursor = null
 		})
 
 		socket.addEventListener("error", () => {
@@ -98,20 +176,24 @@
 		})
 
 		socket.addEventListener("message", async (ev) => {
-			const msg = safeParse((ev as MessageEvent).data)
-			if (!msg || typeof msg !== "object") return
+			let msg: any
+			try {
+				msg = JSON.parse(String((ev as MessageEvent).data))
+			} catch {
+				return
+			}
 
 			if (msg.type === "joined") {
-				roomCode = msg.code ?? roomCode
+				roomCode = msg.code
 				youAre = msg.youAre
+				youId = msg.youId
 				if (msg.youName) userName = msg.youName
-				error = ""
 				return
 			}
 
 			if (msg.type === "state") {
-				board = msg.board ?? board
-				turn = msg.turn ?? turn
+				board = msg.board
+				turn = msg.turn
 				players = msg.players ?? []
 
 				if (pendingFocus) {
@@ -122,13 +204,26 @@
 				return
 			}
 
+			if (msg.type === "cursor") {
+				const m = msg as CursorMsg
+				if (youId && m.id === youId) return
+				if (m.x < 0 || m.x > 1 || m.y < 0 || m.y > 1) return
+				setOpponentCursor(m)
+				return
+			}
+
+			if (msg.type === "cursor_leave") {
+				const m = msg as CursorLeaveMsg
+				if (youId && m.id === youId) return
+				clearOpponentCursor(m.id)
+				return
+			}
+
 			if (msg.type === "error") {
 				error = msg.message || "Error"
 				pendingFocus = false
 				return
 			}
-
-			// ignore "ack" and anything else
 		})
 	}
 
@@ -142,7 +237,6 @@
 			if (c.length !== 6) return reject(new Error("bad code"))
 
 			if (ws?.readyState === WebSocket.OPEN && roomCode === c) return resolve()
-
 			if (ws) {
 				try {
 					ws.close()
@@ -209,6 +303,10 @@
 		}
 	}
 
+	$: yourTurn = Boolean(
+		roomCode && youAre && ((turn === Move.X && youAre === "X") || (turn === Move.O && youAre === "O"))
+	)
+
 	const sendMove = async (r: number, c: number) => {
 		if (!roomCode) return
 		try {
@@ -237,13 +335,13 @@
 
 	$: me = youAre ? players.find((p) => p.mark === youAre)?.name ?? userName : userName
 	$: opponent = youAre ? players.find((p) => p.mark !== youAre)?.name : undefined
-	$: yourTurn = Boolean(
-		roomCode &&
-		youAre &&
-		((turn === Move.X && youAre === "X") || (turn === Move.O && youAre === "O"))
-	)
 
 	onDestroy(() => {
+		if (staleTimer) clearTimeout(staleTimer)
+		staleTimer = null
+		if (raf) cancelAnimationFrame(raf)
+		raf = 0
+
 		if (ws) {
 			try {
 				ws.close()
@@ -252,11 +350,6 @@
 		}
 	})
 </script>
-
-<!-- focus fallback target -->
-<p tabindex="-1" class="sr-only" bind:this={statusEl}>
-	{state === State.Playing ? "Playing" : state === State.Won ? "Won" : "Draw"}
-</p>
 
 <header class="relative">
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">Tic-Tac-Toe</h1>
@@ -275,6 +368,7 @@
 </header>
 
 <div class="grid lg:grid-cols-3">
+	<!-- LEFT AVATAR (X) -->
 	<div class="hidden lg:block justify-self-center my-auto relative">
 		{#if state === State.Won}
 			{#if winner === Move.X}
@@ -311,29 +405,50 @@
 		{/if}
 	</div>
 
-	<div class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden" bind:this={boardEl}>
+	<!-- BOARD -->
+	<div
+		class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden"
+		bind:this={boardEl}
+		on:pointermove={onBoardPointerMove}
+		on:pointerleave={onBoardPointerLeave}
+	>
 		{#each board as row, r}
 			{#each row as col, c}
 				<div class="h-[100px] p-2 flex justify-center items-center bg-neutral-400 aspect-square">
 					{#if col !== Move.Empty}
 						<Icon move={col} />
 					{:else if state === State.Playing}
-						{#if !roomCode || yourTurn}
-							<button
-								type="button"
-								disabled={!yourTurn}
-								on:click={() => sendMove(r, c)}
-								class="h-full w-full rounded-md hover:bg-slate-500/50 focus-visible:bg-slate-500/50 hover:shadow-lg focus-visible:shadow-lg hover:border focus-visible:border focus-visible:ring-0 border-slate-800/50 animate-pulse disabled:cursor-not-allowed disabled:opacity-60"
-							>
-								<span class="hidden">ROW {r + 1} :: COL {c + 1}</span>
-							</button>
-						{:else}
-							<button disabled class="w-full h-full opacity-60 cursor-not-allowed" />
-						{/if}
+						<button
+							type="button"
+							on:click={() => sendMove(r, c)}
+							class={`h-full w-full rounded-md hover:bg-slate-500/50 focus-visible:bg-slate-500/50 hover:shadow-lg focus-visible:shadow-lg hover:border focus-visible:border focus-visible:ring-0 border-slate-800/50 animate-pulse
+								${roomCode && youAre && !yourTurn ? "opacity-60 cursor-not-allowed" : ""}`}
+						>
+							<span class="hidden">ROW {r + 1} :: COL {c + 1}</span>
+						</button>
 					{/if}
 				</div>
 			{/each}
 		{/each}
+
+		{#if opponentCursor}
+			<div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+				<div
+					class="absolute flex items-center gap-2"
+					style={`left:${opponentCursor.x * 100}%; top:${opponentCursor.y * 100}%; transform:translate(0,-50%);`}
+				>
+					<div class={`h-2.5 w-2.5 rounded-full shadow ${cursorDotClass(opponentCursor.mark)}`} />
+					<div class="flex items-center gap-1 px-2 py-1 rounded-md bg-neutral-800/50 text-white text-xs whitespace-nowrap">
+						<span
+							class={`inline-flex items-center justify-center h-4 min-w-4 px-1 rounded text-[10px] font-bold ring-1 ${cursorBadgeClass(opponentCursor.mark)}`}
+						>
+							{opponentCursor.mark}
+						</span>
+						<span>{opponentCursor.name}</span>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		{#if state !== State.Playing}
 			<div class="absolute inset-0 bg-black/10 backdrop-blur-sm">
@@ -346,6 +461,7 @@
 		{/if}
 	</div>
 
+	<!-- RIGHT AVATAR (O) -->
 	<div class="hidden lg:block justify-self-center my-auto relative">
 		{#if state === State.Won}
 			{#if winner === Move.O}
@@ -393,11 +509,8 @@
 			<button
 				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 				on:click|preventDefault={async () => {
-					if (!roomCode) {
-						await createRoom()
-					} else {
-						await navigator.clipboard.writeText(roomCode)
-					}
+					if (!roomCode) await createRoom()
+					else await navigator.clipboard.writeText(roomCode)
 				}}
 				disabled={!connected && ws?.readyState === WebSocket.CONNECTING}
 			>
