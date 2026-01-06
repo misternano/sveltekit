@@ -1,63 +1,46 @@
+<!-- src/routes/tictactoe/+page.svelte -->
 <script lang="ts">
-	import { Move, State } from "./lib/util"
+	import { Move, checkWinner, State } from "./lib/util"
 	import { Icon } from "./components"
-	import { onMount, tick } from "svelte"
+	import { onDestroy, onMount, tick } from "svelte"
 	import { ChevronDown, Loader } from "lucide-svelte"
-
-	type Mark = "X" | "O"
-	type Cell = "" | Mark
-
-	const toMove = (m: Mark): Move => m as unknown as Move
-
-	const checkWinnerNet = (b: Cell[][]): Mark | undefined => {
-		const lines: Cell[][] = [
-			[b[0][0], b[0][1], b[0][2]],
-			[b[1][0], b[1][1], b[1][2]],
-			[b[2][0], b[2][1], b[2][2]],
-			[b[0][0], b[1][0], b[2][0]],
-			[b[0][1], b[1][1], b[2][1]],
-			[b[0][2], b[1][2], b[2][2]],
-			[b[0][0], b[1][1], b[2][2]],
-			[b[0][2], b[1][1], b[2][0]]
-		]
-		for (const [a, c, d] of lines) {
-			if (a && a === c && a === d) return a
-		}
-	}
-
-	const getGameStateNet = (winner: Mark | undefined, b: Cell[][]) => {
-		if (winner) return State.Won
-		if (b.every((row) => row.every((cell) => cell !== ""))) return State.Draw
-		return State.Playing
-	}
 
 	onMount(() => {
 		localStorage.setItem(
 			"bkclb_arcade_last_game",
 			JSON.stringify({ id: "tictactoe", name: "Tic-Tac-Toe", path: "/tictactoe", updatedAt: Date.now() })
 		)
-		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;")
+		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:rem;width:100%;")
 	})
 
 	let boardEl: HTMLElement
 	let statusEl: HTMLElement | undefined
 
 	const focusNextAvailableTile = () => {
-		const nextTile = boardEl.querySelector("button:not(:disabled)")
+		const nextTile = boardEl?.querySelector?.("button:not(:disabled)")
 		if (nextTile) (nextTile as HTMLElement).focus()
 		else statusEl?.focus?.()
 	}
 
-	let board: Cell[][] = [
-		["", "", ""],
-		["", "", ""],
-		["", "", ""]
+	const getEmptyBoard = () => [
+		[Move.Empty, Move.Empty, Move.Empty] as Move[],
+		[Move.Empty, Move.Empty, Move.Empty] as Move[],
+		[Move.Empty, Move.Empty, Move.Empty] as Move[]
 	]
-	let turn: Mark = "O"
-	$: winner = checkWinnerNet(board)
-	$: state = getGameStateNet(winner, board)
 
-	type Player = { mark: Mark; name: string }
+	const getGameState = (winner: Move | undefined, board: Move[][]) => {
+		if (winner) return State.Won
+		if (board.every((row) => row.every((col) => col !== Move.Empty))) return State.Draw
+		return State.Playing
+	}
+
+	let board: Move[][] = getEmptyBoard()
+	let turn: Move = Move.O
+	let state: State = State.Playing
+	$: winner = checkWinner(board)
+	$: state = getGameState(winner, board)
+
+	type Player = { mark: "X" | "O"; name: string }
 	let players: Player[] = []
 
 	const wsBase = "wss://arcade.bkclb.dev/ws"
@@ -65,13 +48,16 @@
 
 	let userName = ""
 	const rnd3 = () => String(Math.floor(100 + Math.random() * 900))
-	const newUserName = () => `#${rnd3()}`
+	const newUserName = () => `User #${rnd3()}`
 
 	let roomCode = ""
 	let joinCode = ""
-	let youAre: Mark | undefined
+	let youAre: "X" | "O" | undefined
 	let error = ""
 	let connected = false
+
+	// Focus only after server-driven DOM update arrives.
+	let pendingFocus = false
 
 	const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6)
 
@@ -84,6 +70,14 @@
 		return out
 	}
 
+	const safeParse = (data: unknown): any | null => {
+		try {
+			return JSON.parse(String(data))
+		} catch {
+			return null
+		}
+	}
+
 	const attachHandlers = (socket: WebSocket) => {
 		socket.addEventListener("open", () => {
 			connected = true
@@ -94,13 +88,8 @@
 			connected = false
 			youAre = undefined
 			players = []
-			roomCode = ""
-			board = [
-				["", "", ""],
-				["", "", ""],
-				["", "", ""]
-			]
-			turn = "O"
+			// keep roomCode so UI still shows copied code; wipe if you prefer:
+			// roomCode = ""
 		})
 
 		socket.addEventListener("error", () => {
@@ -108,29 +97,38 @@
 			error = "Could not connect to server"
 		})
 
-		socket.addEventListener("message", (ev) => {
-			const raw = String((ev as MessageEvent).data)
-			let msg: any
-			try { msg = JSON.parse(raw) } catch { return }
+		socket.addEventListener("message", async (ev) => {
+			const msg = safeParse((ev as MessageEvent).data)
+			if (!msg || typeof msg !== "object") return
 
 			if (msg.type === "joined") {
-				roomCode = msg.code
+				roomCode = msg.code ?? roomCode
 				youAre = msg.youAre
+				if (msg.youName) userName = msg.youName
+				error = ""
 				return
 			}
 
 			if (msg.type === "state") {
-				roomCode = msg.code ?? roomCode
-				board = msg.board as Cell[][]
-				turn = msg.turn as Mark
-				players = (msg.players ?? []) as Player[]
+				board = msg.board ?? board
+				turn = msg.turn ?? turn
+				players = msg.players ?? []
+
+				if (pendingFocus) {
+					await tick()
+					focusNextAvailableTile()
+					pendingFocus = false
+				}
 				return
 			}
 
 			if (msg.type === "error") {
 				error = msg.message || "Error"
+				pendingFocus = false
 				return
 			}
+
+			// ignore "ack" and anything else
 		})
 	}
 
@@ -144,8 +142,11 @@
 			if (c.length !== 6) return reject(new Error("bad code"))
 
 			if (ws?.readyState === WebSocket.OPEN && roomCode === c) return resolve()
+
 			if (ws) {
-				try { ws.close() } catch {}
+				try {
+					ws.close()
+				} catch {}
 				ws = null
 				connected = false
 			}
@@ -153,9 +154,18 @@
 			ws = new WebSocket(`${wsBase}?room=${c}`)
 			attachHandlers(ws)
 
-			const onOpen = () => { cleanup(); resolve() }
-			const onError = () => { cleanup(); reject(new Error("ws error")) }
-			const onClose = () => { cleanup(); reject(new Error("ws closed")) }
+			const onOpen = () => {
+				cleanup()
+				resolve()
+			}
+			const onError = () => {
+				cleanup()
+				reject(new Error("ws error"))
+			}
+			const onClose = () => {
+				cleanup()
+				reject(new Error("ws closed"))
+			}
 			const cleanup = () => {
 				ws?.removeEventListener("open", onOpen)
 				ws?.removeEventListener("error", onError)
@@ -167,9 +177,15 @@
 			ws.addEventListener("close", onClose)
 		})
 
+	const sendJson = async (payload: unknown) => {
+		if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("not open")
+		ws.send(JSON.stringify(payload))
+	}
+
 	const createRoom = async () => {
 		try {
 			ensureUser()
+			error = ""
 			const code = generateRoomCode()
 			await connectToRoom(code)
 		} catch {
@@ -183,23 +199,36 @@
 			ensureUser()
 			const code = normalize(joinCode)
 			joinCode = code
-			if (code.length !== 6) { error = "Enter a 6-character code"; return }
+			if (code.length !== 6) {
+				error = "Enter a 6-character code"
+				return
+			}
 			await connectToRoom(code)
 		} catch {
 			error = "Could not connect to server"
 		}
 	}
 
-	const sendMove = (row: number, col: number) => {
-		if (!ws || ws.readyState !== WebSocket.OPEN) return
-		ws.send(JSON.stringify({ type: "move", row, col }))
-		tick().then(focusNextAvailableTile)
+	const sendMove = async (r: number, c: number) => {
+		if (!roomCode) return
+		try {
+			pendingFocus = true
+			await sendJson({ type: "move", r, c })
+		} catch {
+			pendingFocus = false
+			error = "Could not send move"
+		}
 	}
 
-	const sendReset = () => {
-		if (!ws || ws.readyState !== WebSocket.OPEN) return
-		ws.send(JSON.stringify({ type: "reset" }))
-		tick().then(focusNextAvailableTile)
+	const sendReset = async () => {
+		if (!roomCode) return
+		try {
+			pendingFocus = true
+			await sendJson({ type: "reset" })
+		} catch {
+			pendingFocus = false
+			error = "Could not reset"
+		}
 	}
 
 	const onJoinInput = (e: Event) => {
@@ -208,8 +237,26 @@
 
 	$: me = youAre ? players.find((p) => p.mark === youAre)?.name ?? userName : userName
 	$: opponent = youAre ? players.find((p) => p.mark !== youAre)?.name : undefined
-	$: yourTurn = !!(roomCode && youAre && turn === youAre)
+	$: yourTurn = Boolean(
+		roomCode &&
+		youAre &&
+		((turn === Move.X && youAre === "X") || (turn === Move.O && youAre === "O"))
+	)
+
+	onDestroy(() => {
+		if (ws) {
+			try {
+				ws.close()
+			} catch {}
+			ws = null
+		}
+	})
 </script>
+
+<!-- focus fallback target -->
+<p tabindex="-1" class="sr-only" bind:this={statusEl}>
+	{state === State.Playing ? "Playing" : state === State.Won ? "Won" : "Draw"}
+</p>
 
 <header class="relative">
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">Tic-Tac-Toe</h1>
@@ -232,33 +279,33 @@
 		{#if state === State.Won}
 			{#if winner === Move.X}
 				<svg xmlns="http://www.w3.org/2000/svg" class="z-10 crown stroke-amber-500 absolute -top-6 left-2 -rotate-12" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
+					<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
 				</svg>
 				<svg xmlns="http://www.w3.org/2000/svg" class="winner" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+					<path d="M18 6 6 18" /><path d="m6 6 12 12" />
 				</svg>
 			{:else}
 				<svg xmlns="http://www.w3.org/2000/svg" class="loser" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+					<path d="M18 6 6 18" /><path d="m6 6 12 12" />
 				</svg>
 			{/if}
 		{/if}
 
 		{#if state === State.Draw}
 			<svg xmlns="http://www.w3.org/2000/svg" class="loser" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+				<path d="M18 6 6 18" /><path d="m6 6 12 12" />
 			</svg>
 		{/if}
 
 		{#if state === State.Playing}
-			{#if turn === "X"}
+			{#if turn === Move.X}
 				<div class="absolute right-0 rotate-45"><ChevronDown size="50" class="animate-bounce" /></div>
 				<svg xmlns="http://www.w3.org/2000/svg" class="turn" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+					<path d="M18 6 6 18" /><path d="m6 6 12 12" />
 				</svg>
 			{:else}
 				<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+					<path d="M18 6 6 18" /><path d="m6 6 12 12" />
 				</svg>
 			{/if}
 		{/if}
@@ -268,10 +315,10 @@
 		{#each board as row, r}
 			{#each row as col, c}
 				<div class="h-[100px] p-2 flex justify-center items-center bg-neutral-400 aspect-square">
-					{#if col !== ""}
-						<Icon move={toMove(col)} />
+					{#if col !== Move.Empty}
+						<Icon move={col} />
 					{:else if state === State.Playing}
-						{#if roomCode && youAre}
+						{#if !roomCode || yourTurn}
 							<button
 								type="button"
 								disabled={!yourTurn}
@@ -291,10 +338,7 @@
 		{#if state !== State.Playing}
 			<div class="absolute inset-0 bg-black/10 backdrop-blur-sm">
 				<div class="h-full flex justify-center items-center">
-					<button
-						class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
-						on:click={sendReset}
-					>
+					<button class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all" on:click={sendReset}>
 						Play Again
 					</button>
 				</div>
@@ -306,10 +350,10 @@
 		{#if state === State.Won}
 			{#if winner === Move.O}
 				<svg xmlns="http://www.w3.org/2000/svg" class="z-10 crown stroke-amber-500 absolute -top-8 right-2 rotate-12" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
+					<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
 				</svg>
 				<svg xmlns="http://www.w3.org/2000/svg" class="winner" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="12" cy="12" r="10"/>
+					<circle cx="12" cy="12" r="10" />
 				</svg>
 			{:else}
 				<svg xmlns="http://www.w3.org/2000/svg" class="loser" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -320,19 +364,19 @@
 
 		{#if state === State.Draw}
 			<svg xmlns="http://www.w3.org/2000/svg" class="loser" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="10"/>
+				<circle cx="12" cy="12" r="10" />
 			</svg>
 		{/if}
 
 		{#if state === State.Playing}
-			{#if turn === "O"}
+			{#if turn === Move.O}
 				<div class="absolute -rotate-45"><ChevronDown size="50" class="animate-bounce" /></div>
 				<svg xmlns="http://www.w3.org/2000/svg" class="turn" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="12" cy="12" r="10"/>
+					<circle cx="12" cy="12" r="10" />
 				</svg>
 			{:else}
 				<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="12" cy="12" r="10"/>
+					<circle cx="12" cy="12" r="10" />
 				</svg>
 			{/if}
 		{/if}
@@ -366,6 +410,7 @@
 					Create Room
 				{/if}
 			</button>
+
 			<div class={`${roomCode && "hidden"} flex items-center gap-2`}>
 				<input
 					class="w-44 px-3 py-2 rounded-md bg-neutral-800 text-white outline-none ring-1 ring-neutral-700 focus:ring-2 focus:ring-indigo-400 tracking-[0.35em] text-center uppercase"
@@ -389,7 +434,7 @@
 	</div>
 
 	{#if error}
-		<div class="text-sm text-red-300">{error}</div>
+		<div class="text-sm text-red-300" tabindex="-1" bind:this={statusEl}>{error}</div>
 	{/if}
 </div>
 
