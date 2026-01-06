@@ -23,7 +23,7 @@
 			id: "tictactoe",
 			name: "Tic-Tac-Toe",
 			path: "/tictactoe",
-			tagline: "Fast local duels with perfect-information mind games."
+			tagline: "Fast duels with perfect-information mind games."
 		},
 		{
 			id: "snake",

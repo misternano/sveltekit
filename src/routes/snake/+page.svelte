@@ -8,13 +8,9 @@
 	onMount(() => {
 		localStorage.setItem(
 			"bkclb_arcade_last_game",
-			JSON.stringify({
-				id: "snake",
-				name: "Snake",
-				path: "/snake",
-				updatedAt: Date.now()
-			})
+			JSON.stringify({ id: "snake", name: "Snake", path: "/snake", updatedAt: Date.now() })
 		)
+		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;");
 	})
 
 	let state: State = State.Playing;
