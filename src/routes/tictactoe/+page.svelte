@@ -2,7 +2,7 @@
 	import { Move, checkWinner, State } from "./lib/util"
 	import { EmptyCell, Icon } from "./components"
 	import { onMount, tick } from "svelte"
-	import { ChevronDown } from "lucide-svelte"
+	import { ChevronDown, Loader } from "lucide-svelte"
 
 	onMount(() => {
 		localStorage.setItem(
@@ -316,22 +316,20 @@
 	</div>
 </div>
 
-<div class="w-[80%] mx-auto mt-10 flex flex-col gap-3">
-	<div class="flex flex-wrap items-center justify-between gap-3">
-		<div class="text-sm text-neutral-300">
+<div class="w-[50%] mx-auto mt-10 flex flex-col gap-3">
+	<div class="flex flex-col flex-wrap items-center gap-3">
+		<div class="flex flex-row gap-2 text-sm text-neutral-300">
 			<div class="font-semibold">{me}</div>
 			<div class="text-neutral-400">{opponent ? `vs ${opponent}` : "Waiting for opponent…"}</div>
 		</div>
-
 		<div class="flex flex-wrap items-center gap-2">
 			<button
-				class="px-4 py-2 rounded-md bg-indigo-500 text-white ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+				class={`${roomCode && "hidden"} flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-indigo-500 text-white ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60`}
 				on:click|preventDefault={createRoom}
 				disabled={!connected && ws?.readyState === WebSocket.CONNECTING}
 			>
-				Create Room
+				{#if ws?.readyState === WebSocket.CONNECTING}<Loader size="16" class="animate-spin" />{/if} Create Room
 			</button>
-
 			<div class="flex items-center gap-2">
 				<div class="px-3 py-2 rounded-md bg-neutral-800 ring-1 ring-neutral-700 text-neutral-200 tracking-[0.25em] uppercase font-mono">
 					{roomCode || "------"}
