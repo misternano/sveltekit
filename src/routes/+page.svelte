@@ -3,7 +3,7 @@
 	import { onMount } from "svelte"
 	import { Sparkles, Clock, RotateCcw } from "lucide-svelte"
 
-	type GameId = "sudoku" | "tictactoe" | "snake"
+	type GameId = "sudoku" | "tictactoe" | "snake" | "blackjack"
 
 	type GameMeta = {
 		id: GameId
@@ -23,13 +23,19 @@
 			id: "tictactoe",
 			name: "Tic-Tac-Toe",
 			path: "/tictactoe",
-			tagline: "Fast duels with perfect-information mind games."
+			tagline: "Quick online duels — read the board, steal the win."
 		},
 		{
 			id: "snake",
 			name: "Snake",
 			path: "/snake",
 			tagline: "Classic arcade survival. Chase the length, dodge yourself."
+		},
+		{
+			id: "blackjack",
+			name: "Black Jack",
+			path: "/blackjack",
+			tagline: "Hit, stand, double — chase 21 without busting."
 		}
 	]
 
