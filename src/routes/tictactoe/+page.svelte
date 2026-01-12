@@ -46,7 +46,7 @@
 	type Player = { mark: "X" | "O"; name: string }
 	let players: Player[] = []
 
-	const wsBase = "wss://arcade.bkclb.dev/ws"
+	const wsBase = "wss://arcade.bkclb.dev/api/ws"
 	let ws: WebSocket | null = null
 
 	let userName = ""
