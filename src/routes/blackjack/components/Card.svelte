@@ -39,6 +39,7 @@
 <div
 	in:fly={{ y: -8, x: -6, opacity: 0, duration: 180 }}
 	class="cardWrap w-14 h-20 sm:w-16 sm:h-24 [perspective:900px]"
+	class:canHoverFlip={revealed}
 >
 	<div
 		class="cardInner relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d]"
@@ -62,7 +63,8 @@
 	.cardWrap {
 		transform-style: preserve-3d;
 	}
-	.cardWrap:hover .cardInner {
+
+	.cardWrap.canHoverFlip:hover .cardInner {
 		transform: rotateY(180deg) rotateX(4deg) rotateZ(-2deg);
 	}
 </style>
