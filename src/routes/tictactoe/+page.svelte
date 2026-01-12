@@ -1,6 +1,6 @@
 <!-- src/routes/tictactoe/+page.svelte -->
 <script lang="ts">
-	import { Move, checkWinner, State } from "./lib/util"
+	import { Move, State, evaluateBoard, opponentOf } from "./lib/util"
 	import { Icon } from "./components"
 	import { onDestroy, onMount, tick } from "svelte"
 	import { ChevronDown, Loader } from "lucide-svelte"
@@ -29,10 +29,18 @@
 		[Move.Empty, Move.Empty, Move.Empty] as Move[]
 	]
 
-	const getGameState = (winner: Move | undefined, board: Move[][]) => {
-		if (winner) return State.Won
-		if (board.every((row) => row.every((col) => col !== Move.Empty))) return State.Draw
-		return State.Playing
+	const isEmptyBoard = (b: Move[][]) => b.every((row) => row.every((cell) => cell === Move.Empty))
+
+	const safeEvaluate = (b: Move[][]) => {
+		try {
+			return evaluateBoard(b)
+		} catch {
+			return {
+				state: State.Playing,
+				winner: null as Move.X | Move.O | null,
+				winningCells: [] as [number, number][]
+			}
+		}
 	}
 
 	let board: Move[][] = getEmptyBoard()
@@ -40,8 +48,63 @@
 	let state: State = State.Playing
 	let pendingFocus = false
 
-	$: winner = checkWinner(board)
-	$: state = getGameState(winner, board)
+	let awaitingStateAfterReset = false
+	let roundStarter: Move.X | Move.O = Move.O
+
+	$: evaluation = safeEvaluate(board)
+	$: winner = evaluation.winner ?? undefined
+	$: state = evaluation.state
+
+	let winningKeySet = new Set<string>()
+	let winIndexByKey = new Map<string, number>()
+
+	$: {
+		const keys = evaluation.winningCells.map(([r, c]) => `${r}:${c}`)
+		winningKeySet = new Set(keys)
+		winIndexByKey = new Map(keys.map((k, i) => [k, i]))
+	}
+
+	const isWinningCell = (r: number, c: number) => winningKeySet.has(`${r}:${c}`)
+	const winDelayMs = (r: number, c: number) => (winIndexByKey.get(`${r}:${c}`) ?? 0) * 90
+
+	type Point = { x: number; y: number }
+	let showWinLine = false
+	let winLine = { x1: 0, y1: 0, x2: 0, y2: 0 }
+	let winLineNonce = 0
+
+	const cellCenter = (r: number, c: number): Point => {
+		if (!boardEl) return { x: 0, y: 0 }
+		const tile = boardEl.querySelector(`[data-rc="${r}:${c}"]`) as HTMLElement | null
+		if (!tile) return { x: 0, y: 0 }
+		const b = boardEl.getBoundingClientRect()
+		const t = tile.getBoundingClientRect()
+		return { x: t.left - b.left + t.width / 2, y: t.top - b.top + t.height / 2 }
+	}
+
+	const computeWinLine = async () => {
+		const nonce = ++winLineNonce
+
+		if (!boardEl || state !== State.Won || evaluation.winningCells.length !== 3) {
+			showWinLine = false
+			return
+		}
+
+		await tick()
+		if (nonce !== winLineNonce) return
+
+		const [a, , c] = evaluation.winningCells
+		const p1 = cellCenter(a[0], a[1])
+		const p2 = cellCenter(c[0], c[1])
+
+		winLine = { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }
+		showWinLine = true
+	}
+
+	$: computeWinLine()
+
+	const onResize = () => {
+		void computeWinLine()
+	}
 
 	type Player = { mark: "X" | "O"; name: string }
 	let players: Player[] = []
@@ -79,8 +142,8 @@
 		id: string
 		name: string
 		mark: "X" | "O"
-		x: number // 0..1
-		y: number // 0..1
+		x: number
+		y: number
 		ts: number
 	}
 
@@ -107,7 +170,14 @@
 	}
 
 	const canSendCursor = () =>
-		Boolean(ws && ws.readyState === WebSocket.OPEN && roomCode && youAre && state === State.Playing)
+		Boolean(
+			ws &&
+			ws.readyState === WebSocket.OPEN &&
+			roomCode &&
+			youAre &&
+			state === State.Playing &&
+			!awaitingStateAfterReset
+		)
 
 	let raf = 0
 	let lastCursor = { x: 0, y: 0 }
@@ -168,6 +238,7 @@
 			youId = undefined
 			players = []
 			opponentCursor = null
+			awaitingStateAfterReset = false
 		})
 
 		socket.addEventListener("error", () => {
@@ -196,6 +267,12 @@
 				turn = msg.turn
 				players = msg.players ?? []
 
+				if (isEmptyBoard(board) && (turn === Move.X || turn === Move.O)) {
+					roundStarter = turn
+				}
+
+				awaitingStateAfterReset = false
+
 				if (pendingFocus) {
 					await tick()
 					focusNextAvailableTile()
@@ -222,6 +299,7 @@
 			if (msg.type === "error") {
 				error = msg.message || "Error"
 				pendingFocus = false
+				awaitingStateAfterReset = false
 				return
 			}
 		})
@@ -304,11 +382,16 @@
 	}
 
 	$: yourTurn = Boolean(
-		roomCode && youAre && ((turn === Move.X && youAre === "X") || (turn === Move.O && youAre === "O"))
+		roomCode &&
+		youAre &&
+		!awaitingStateAfterReset &&
+		state === State.Playing &&
+		((turn === Move.X && youAre === "X") || (turn === Move.O && youAre === "O"))
 	)
 
 	const sendMove = async (r: number, c: number) => {
 		if (!roomCode) return
+		if (!yourTurn) return
 		try {
 			pendingFocus = true
 			await sendJson({ type: "move", r, c })
@@ -321,10 +404,18 @@
 	const sendReset = async () => {
 		if (!roomCode) return
 		try {
+			awaitingStateAfterReset = true
 			pendingFocus = true
+
+			roundStarter = opponentOf(roundStarter)
+			board = getEmptyBoard()
+			turn = roundStarter
+			opponentCursor = null
+
 			await sendJson({ type: "reset" })
 		} catch {
 			pendingFocus = false
+			awaitingStateAfterReset = false
 			error = "Could not reset"
 		}
 	}
@@ -336,7 +427,13 @@
 	$: me = youAre ? players.find((p) => p.mark === youAre)?.name ?? userName : userName
 	$: opponent = youAre ? players.find((p) => p.mark !== youAre)?.name : undefined
 
+	onMount(() => {
+		window.addEventListener("resize", onResize)
+	})
+
 	onDestroy(() => {
+		window.removeEventListener("resize", onResize)
+
 		if (staleTimer) clearTimeout(staleTimer)
 		staleTimer = null
 		if (raf) cancelAnimationFrame(raf)
@@ -368,7 +465,6 @@
 </header>
 
 <div class="grid lg:grid-cols-3">
-	<!-- LEFT AVATAR (X) -->
 	<div class="hidden lg:block justify-self-center my-auto relative">
 		{#if state === State.Won}
 			{#if winner === Move.X}
@@ -405,7 +501,6 @@
 		{/if}
 	</div>
 
-	<!-- BOARD -->
 	<div
 		class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden"
 		bind:this={boardEl}
@@ -414,13 +509,24 @@
 	>
 		{#each board as row, r}
 			{#each row as col, c}
-				<div class="h-[100px] p-2 flex justify-center items-center bg-neutral-400 aspect-square">
+				<div
+					data-rc={`${r}:${c}`}
+					style={`--win-delay:${winDelayMs(r, c)}ms;`}
+					class={`tile relative h-[100px] p-2 flex justify-center items-center aspect-square transition
+						${state === State.Won && isWinningCell(r, c) ? "bg-amber-200/70 win-tile" : state === State.Won ? "bg-neutral-400/60 dim-tile" : "bg-neutral-400"}`}
+				>
+					{#if state === State.Won && isWinningCell(r, c)}
+						<div class="absolute inset-1 rounded-md ring-4 ring-amber-400 shadow-lg shadow-amber-400/30 pointer-events-none win-ring" />
+					{/if}
+
 					{#if col !== Move.Empty}
 						<Icon move={col} />
 					{:else if state === State.Playing}
 						<button
 							type="button"
 							on:click={() => sendMove(r, c)}
+							disabled={Boolean(roomCode && youAre && !yourTurn)}
+							aria-disabled={Boolean(roomCode && youAre && !yourTurn)}
 							class={`h-full w-full rounded-md hover:bg-slate-500/50 focus-visible:bg-slate-500/50 hover:shadow-lg focus-visible:shadow-lg hover:border focus-visible:border focus-visible:ring-0 border-slate-800/50 animate-pulse
 								${roomCode && youAre && !yourTurn ? "opacity-60 cursor-not-allowed" : ""}`}
 						>
@@ -430,6 +536,12 @@
 				</div>
 			{/each}
 		{/each}
+
+		{#if showWinLine}
+			<svg class="winline" aria-hidden="true">
+				<line x1={winLine.x1} y1={winLine.y1} x2={winLine.x2} y2={winLine.y2} class="winline-stroke" />
+			</svg>
+		{/if}
 
 		{#if opponentCursor}
 			<div class="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -451,9 +563,12 @@
 		{/if}
 
 		{#if state !== State.Playing}
-			<div class="absolute inset-0 bg-black/10 backdrop-blur-sm">
+			<div class="absolute inset-0 bg-black/10">
 				<div class="h-full flex justify-center items-center">
-					<button class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all" on:click={sendReset}>
+					<button
+						class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
+						on:click={sendReset}
+					>
 						Play Again
 					</button>
 				</div>
@@ -461,7 +576,6 @@
 		{/if}
 	</div>
 
-	<!-- RIGHT AVATAR (O) -->
 	<div class="hidden lg:block justify-self-center my-auto relative">
 		{#if state === State.Won}
 			{#if winner === Move.O}
@@ -570,5 +684,69 @@
 
 	.crown {
 		filter: drop-shadow(0 0 0.75rem gold);
+	}
+
+	.winline {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		z-index: 30;
+	}
+
+	.winline-stroke {
+		stroke: rgba(251, 191, 36, 0.98);
+		stroke-width: 10;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+		filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.35));
+		stroke-dasharray: 1000;
+		stroke-dashoffset: 1000;
+		animation: draw-line 420ms ease-out forwards, pulse-line 1.2s ease-in-out 450ms infinite;
+	}
+
+	@keyframes draw-line {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@keyframes pulse-line {
+		0%,
+		100% {
+			opacity: 0.9;
+		}
+		50% {
+			opacity: 0.55;
+		}
+	}
+
+	.dim-tile {
+		filter: saturate(0.95);
+	}
+
+	.win-tile {
+		will-change: transform, filter;
+		animation: win-pop 380ms cubic-bezier(0.2, 0.9, 0.2, 1) var(--win-delay, 0ms) both;
+	}
+
+	.win-ring {
+		z-index: 26;
+	}
+
+	@keyframes win-pop {
+		0% {
+			transform: scale(1);
+		}
+		35% {
+			transform: scale(1.06);
+		}
+		70% {
+			transform: scale(0.99);
+		}
+		100% {
+			transform: scale(1);
+		}
 	}
 </style>

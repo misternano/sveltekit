@@ -262,3 +262,8 @@
 </div>
 
 <Selector noteMode={noteMode} toggleNoteMode={toggleNoteMode} onNumberSelect={handleNumberButtonClick} />
+<style>
+	:global(body) {
+		@apply bg-neutral-900 text-[#cccccc];
+	}
+</style>

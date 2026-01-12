@@ -1,5 +1,5 @@
 <script>
-	import { Grid2x2Check, LayoutGrid, Worm } from "lucide-svelte";
+	import { Grid2x2Check, LayoutGrid, Spade, Worm } from "lucide-svelte";
 </script>
 
 <a href="/tictactoe" class="flex flex-row gap-2 items-center px-4 bg-indigo-500 ring ring-indigo-300 text-white rounded-md rounded-t-none hover:scale-105 transition-all">
@@ -15,4 +15,9 @@
 <a href="/snake" class="flex flex-row gap-2 items-center px-4 bg-indigo-500 ring ring-indigo-300 text-white rounded-md rounded-t-none hover:scale-105 transition-all">
 	<Worm size="16" />
 	<span class="hidden md:block text-lg">Snake</span>
+</a>
+
+<a href="/blackjack" class="flex flex-row gap-2 items-center px-4 bg-indigo-500 ring ring-indigo-300 text-white rounded-md rounded-t-none hover:scale-105 transition-all">
+	<Spade size="16" />
+	<span class="hidden md:block text-lg">Black Jack</span>
 </a>
