@@ -5,11 +5,7 @@
 	import { onMount } from "svelte";
 
 	onMount(() => {
-		localStorage.setItem(
-			"bkclb_arcade_last_game",
-			JSON.stringify({ id: "sudoku", name: "Sudoku", path: "/sudoku", updatedAt: Date.now() })
-		)
-		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;");
+		console.info(`%c> Mounted`, "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem");
 	})
 
 	let board: Board = generatePuzzleBoard()
@@ -19,11 +15,11 @@
 	let conflictSet: Set<string> = new Set()
 	let hasWon = false
 
-	function cellKey(r: number, c: number) {
+	const cellKey = (r: number, c: number) => {
 		return `${r}-${c}`
 	}
 
-	function computeConflicts(b: Board): Set<string> {
+	const computeConflicts = (b: Board): Set<string> => {
 		const conflicts = new Set<string>()
 
 		for (let r = 0; r < SIZE; r++) {
@@ -86,7 +82,7 @@
 		return conflicts
 	}
 
-	function isBoardComplete(b: Board) {
+	const isBoardComplete = (b: Board) => {
 		for (let r = 0; r < SIZE; r++) {
 			for (let c = 0; c < SIZE; c++) {
 				if (b[r][c].value === null) return false
@@ -95,7 +91,13 @@
 		return true
 	}
 
-	function newGame() {
+	const clearSelection = () => {
+		selectedRow = null
+		selectedCol = null
+	}
+
+	const newGame = () => {
+		clearSelection()
 		board = generatePuzzleBoard()
 		selectedRow = null
 		selectedCol = null
@@ -106,19 +108,19 @@
 	$: conflictSet = computeConflicts(board)
 	$: hasWon = isBoardComplete(board) && conflictSet.size === 0
 
-	function selectCell(r: number, c: number) {
+	const selectCell = (r: number, c: number) => {
 		if (board[r][c].fixed) return
 		selectedRow = r
 		selectedCol = c
 	}
 
-	function updateCell(r: number, c: number, updater: (cell: Board[0][0]) => Board[0][0]) {
+	const updateCell = (r: number, c: number, updater: (cell: Board[0][0]) => Board[0][0]) => {
 		board = board.map((row, ri) =>
 			row.map((cell, ci) => (ri === r && ci === c ? updater(cell) : cell))
 		)
 	}
 
-	function handleDigitInput(d: number) {
+	const handleDigitInput = (d: number) => {
 		if (selectedRow === null || selectedCol === null) return
 		const r = selectedRow
 		const c = selectedCol
@@ -135,7 +137,7 @@
 		}
 	}
 
-	function clearCell() {
+	const clearCell = () => {
 		if (selectedRow === null || selectedCol === null) return
 		const r = selectedRow
 		const c = selectedCol
@@ -144,7 +146,7 @@
 		updateCell(r, c, (old) => ({ ...old, value: null, notes: [] }))
 	}
 
-	function handleArrow(key: string) {
+	const handleArrow = (key: string) => {
 		if (selectedRow === null || selectedCol === null) {
 			selectedRow = 0
 			selectedCol = 0
@@ -160,7 +162,7 @@
 		selectedCol = c
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
+	const handleKeydown = (e: KeyboardEvent) => {
 		if (e.key === " ") {
 			e.preventDefault()
 			noteMode = !noteMode
@@ -186,25 +188,39 @@
 		}
 	}
 
-	function handleNumberButtonClick(d: number) {
+	const handleNumberButtonClick = (d: number) => {
 		handleDigitInput(d)
 	}
 
-	function toggleNoteMode() {
-		noteMode = !noteMode
+	type Letter = {
+		ch: string;
+		scale: number;
+		rotate?: number;
 	}
 
-	function clearSelection() {
-		selectedRow = null
-		selectedCol = null
-	}
+	const title: Letter[] = [
+		{ ch: "s", scale: 1 },
+		{ ch: "u", scale: 1.07 },
+		{ ch: "d", scale: 1.11 },
+		{ ch: "o", scale: 1.16 },
+		{ ch: "k", scale: 1.10 },
+		{ ch: "u", scale: 1.01 },
+		{ ch: "!", scale: 0.97, rotate: 3 }
+	]
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 <header class="relative">
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
-		Sudoku
+		{#each title as l}
+		<span
+			class="inline-block bg-gradient-to-b from-indigo-300 to-indigo-500 bg-clip-text text-transparent will-change-transform tracking-wide"
+			style={`transform: translateZ(0) scale(${l.scale}) rotate(${l.rotate ? l.rotate+"deg" : 0});`}
+		>
+			{l.ch}
+		</span>
+		{/each}
 	</h1>
 	{#if hasWon}
 		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
@@ -215,16 +231,26 @@
 	{/if}
 </header>
 
-<div class="flex flex-col items-center gap-6" role="button" tabindex="0" on:click={clearSelection} on:keydown={(e) => (e.key === "Escape" || e.key === "Enter") && clearSelection()}>
-	<div class="max-w-[90vw] w-[90vw] aspect-square md:w-auto md:max-w-none">
-		<div class="grid grid-cols-9">
+<div class="flex flex-col items-center gap-6 cursor-pointer" role="button" tabindex="0" on:click={clearSelection} on:keydown={(e) => (e.key === "Escape" || e.key === "Enter") && clearSelection()}>
+	<div class="max-w-[90vw] w-[90vw] aspect-square md:w-auto md:max-w-none rounded-xl overflow-hidden border border-white">
+		<div class="board grid grid-cols-9 gap-0.5">
+			{#if hasWon}
+				<div class="absolute inset-0 bg-black/10 z-20 backdrop-blur-sm">
+					<div class="h-full flex justify-center items-center">
+						<button
+							class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
+							on:click={newGame}
+						>
+							Play Again
+						</button>
+					</div>
+				</div>
+			{/if}
 			{#each board as row, r}
 				{#each row as cell, c}
 					<button
 						type="button"
-						class={`relative h-full w-auto aspect-square md:h-16 md:w-16 flex items-center justify-center text-black text-xl md:text-3xl font-medium border border-neutral-300 group focus:outline-none focus:ring-0 focus-visible:ring-0
-						${r % 3 === 2 && r !== SIZE - 1 ? "border-b-2 border-b-black" : ""}
-						${c % 3 === 2 && c !== SIZE - 1 ? "border-r-2 border-r-black" : ""}
+						class={`cell relative h-full w-auto aspect-square md:h-16 md:w-16 flex items-center justify-center text-black text-xl md:text-3xl font-medium border border-neutral-300 group focus:outline-none focus:ring-0 focus-visible:ring-0
 						${conflictSet.has(cellKey(r, c))
 							? "bg-red-300"
 							: cell.fixed
@@ -261,9 +287,63 @@
 	</div>
 </div>
 
-<Selector noteMode={noteMode} toggleNoteMode={toggleNoteMode} onNumberSelect={handleNumberButtonClick} />
+<Selector noteMode={noteMode} toggleNoteMode={() => noteMode = !noteMode} onNumberSelect={handleNumberButtonClick} />
 <style>
 	:global(body) {
 		@apply bg-neutral-900 text-[#cccccc];
+	}
+
+	.board {
+		position: relative;
+		isolation: isolate;
+
+		--gap: 0.125rem; /* tailwind gap-0.5 */
+		--thick-line: rgba(255, 255, 255, 0.75);
+	}
+
+	.board::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 5;
+
+		--cell: calc((100% - (8 * var(--gap))) / 9);
+		--x1: calc((3 * var(--cell)) + (2 * var(--gap)));
+		--x2: calc((6 * var(--cell)) + (5 * var(--gap)));
+		--y1: calc((3 * var(--cell)) + (2 * var(--gap)));
+		--y2: calc((6 * var(--cell)) + (5 * var(--gap)));
+
+		background:
+			/* vertical */
+			linear-gradient(to right,
+			transparent 0,
+			transparent var(--x1),
+			var(--thick-line) var(--x1),
+			var(--thick-line) calc(var(--x1) + var(--gap)),
+			transparent calc(var(--x1) + var(--gap))
+			),
+			linear-gradient(to right,
+			transparent 0,
+			transparent var(--x2),
+			var(--thick-line) var(--x2),
+			var(--thick-line) calc(var(--x2) + var(--gap)),
+			transparent calc(var(--x2) + var(--gap))
+			),
+			/* horizontal */
+			linear-gradient(to bottom,
+			transparent 0,
+			transparent var(--y1),
+			var(--thick-line) var(--y1),
+			var(--thick-line) calc(var(--y1) + var(--gap)),
+			transparent calc(var(--y1) + var(--gap))
+			),
+			linear-gradient(to bottom,
+			transparent 0,
+			transparent var(--y2),
+			var(--thick-line) var(--y2),
+			var(--thick-line) calc(var(--y2) + var(--gap)),
+			transparent calc(var(--y2) + var(--gap))
+			);
 	}
 </style>

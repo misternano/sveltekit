@@ -18,7 +18,7 @@
 	{/each}
 	<button
 		type="button"
-		class={`p-1 px-3 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all flex items-center justify-center ${noteMode === true ? "bg-indigo-800 ring" : ""}`}
+		class={`p-1 px-3 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all flex items-center justify-center ${noteMode === true ? "bg-indigo-700  ring" : ""}`}
 		on:click={toggleNoteMode}
 		aria-pressed={noteMode}
 		aria-label="Toggle note mode"

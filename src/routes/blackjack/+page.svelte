@@ -1,21 +1,20 @@
 <script lang="ts">
 	import { onDestroy, onMount } from "svelte"
 	import { get } from "svelte/store"
-	import Hand from "./components/Hand.svelte"
-	import {
-		createBlackjackStore,
-		outcomeMessage,
-		type GameRules,
-		type GameState
-	} from "./lib/util"
-	import { Coins, DiamondPlus, HandCoins } from "lucide-svelte"
+	import { Hand, Chip } from "./components"
+	import { createBlackjackStore, outcomeMessage, type GameRules, type GameState, isTenValue } from "./lib/util"
+	import { HandCoins, Spade } from "lucide-svelte"
 
 	onMount(() => {
-		localStorage.setItem(
-			"bkclb_arcade_last_game",
-			JSON.stringify({ id: "blackjack", name: "Black Jack", path: "/blackjack", updatedAt: Date.now() })
-		)
-		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;");
+		try {
+			const raw = localStorage.getItem("blackjack:chips")
+			const parsed = raw ? Number(raw) : NaN
+			if (Number.isFinite(parsed) && parsed >= 0) chips = parsed
+			else localStorage.setItem("blackjack:chips", "1000")
+		} catch (_) {
+			console.error("[Error mounting blackjack:chips] ",_)
+		}
+		console.info(`%c> Mounted`, "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;");
 	})
 
 	const MAX_TOTAL_BET = 50
@@ -34,7 +33,7 @@
 	const playerHandValues = bj.playerHandValues
 	const CHIP_REFILL = 1000
 
-	function refillIfBroke(): boolean {
+	const refillIfBroke = (): boolean => {
 		if (chips > 0) return false
 		saveChips(CHIP_REFILL)
 		bet = Math.min(bet, CHIP_REFILL, MAX_TOTAL_BET)
@@ -63,27 +62,23 @@
 	const saveChips = (n: number) => {
 		chips = n
 		try {
-			localStorage.setItem("blackjackChips", String(chips))
+			localStorage.setItem("blackjack:chips", String(chips))
 		} catch(_) {
-			console.error("[Error saving blackjackChips] ",_)
+			console.error("[Error saving blackjack:chips] ",_)
 		}
 	}
 
-	function shimmerChips() {
+	const shimmerChips = () => {
 		chipShimmerId++
 		chipDeltaTextId++
 	}
 
-	function shimmerBet() {
+	const shimmerBet = () => {
 		betShimmerId++
 	}
 
-	function isTenValueRank(rank: string) {
-		return rank === "10" || rank === "J" || rank === "Q" || rank === "K"
-	}
-
 	let dealerToken = 0
-	async function runDealer() {
+	const runDealer = async () => {
 		const t = ++dealerToken
 		await sleep(450)
 		while (gs.round === "dealer" && t === dealerToken) {
@@ -125,7 +120,6 @@
 		!gs.doubled[gs.activeHand] &&
 		cur.length === 2 &&
 		add > 0 &&
-		totalBet + add <= MAX_TOTAL_BET &&
 		chips >= add
 
 	$: canSplit =
@@ -135,12 +129,12 @@
 			(rules.allowTenValueSplit &&
 				cur[0] &&
 				cur[1] &&
-				isTenValueRank(cur[0].rank) &&
-				isTenValueRank(cur[1].rank))) &&
+				isTenValue(cur[0].rank) &&
+				isTenValue(cur[1].rank))) &&
 		totalBet + add <= MAX_TOTAL_BET &&
 		chips >= add
 
-	function startRound() {
+	const startRound = () => {
 		if (!canDeal) return
 		dealerToken++
 
@@ -162,7 +156,7 @@
 		bj.dispatch({ type: "deal" })
 	}
 
-	function doReset() {
+	const doReset = () => {
 		dealerToken++
 		bj.dispatch({ type: "resetShoe" })
 
@@ -172,15 +166,15 @@
 		lastChipDelta = 0
 	}
 
-	function doHit() {
+	const doHit = () => {
 		bj.dispatch({ type: "hit" })
 	}
 
-	function doStand() {
+	const doStand = () => {
 		bj.dispatch({ type: "stand" })
 	}
 
-	function doSplit() {
+	const doSplit = () => {
 		if (!canSplit) return
 		dealerToken++
 
@@ -191,7 +185,7 @@
 		bj.dispatch({ type: "split" })
 	}
 
-	function doDouble() {
+	const doDouble = () => {
 		if (!canDouble) return
 		dealerToken++
 
@@ -201,18 +195,6 @@
 
 		bj.dispatch({ type: "doubleDown" })
 	}
-
-	onMount(() => {
-		try {
-			const raw = localStorage.getItem("blackjackChips")
-			const parsed = raw ? Number(raw) : NaN
-			if (Number.isFinite(parsed) && parsed >= 0) chips = parsed
-			else localStorage.setItem("blackjackChips", "1000")
-		} catch (_) {
-			console.error("[Error mounting blackjackChips] ",_)
-		}
-		startRound()
-	})
 
 	$: if (gs.round === "done" && !settled && totalBet > 0) {
 		let payout = 0
@@ -233,29 +215,28 @@
 
 	$: maxBet = Math.min(MAX_TOTAL_BET, chips)
 
-	function setBetSafe(n: number) {
+	const setBetSafe = (n: number) => {
 		const next = clamp(Math.floor(n || 0), 1, Math.max(1, maxBet))
 		if (next !== bet) bet = next
 	}
 
-	function bumpBet(delta: number) {
+	const bumpBet = (delta: number) => {
 		setBetSafe(bet + delta)
 	}
 
-	function onBetBlur() {
+	const onBetBlur = () => {
 		setBetSafe(bet)
 	}
 
 </script>
 
 <header class="relative">
-	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center mt-24 mb-10">Black Jack</h1>
-
+	<h1 class="flex flex-row gap-1 items-center w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
+		<span class="bg-gradient-to-tr from-amber-600 to-yellow-500 bg-clip-text text-transparent">Black</span> <Spade size={20} class="fill-red-800 stroke-red-500" /> <span class="bg-gradient-to-tl from-amber-600 to-yellow-500 bg-clip-text text-transparent">Jack</span>
+	</h1>
 	{#if gs.outcome}
 		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium">
-			<h2
-				class="text-9xl uppercase font-impact bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent"
-			>
+			<h2 class="text-9xl uppercase font-impact bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
 				{outcomeMessage(gs.outcome)}
 			</h2>
 		</div>
@@ -277,14 +258,14 @@
 			<div class="flex flex-row gap-2 items-center text-right text-xs text-white/70">
 				<div class="relative flex items-center">
 					{#key chipShimmerId}
-						<div class={`chipShimmer flex items-center gap-1 ${lastChipDelta >= 0 ? "win" : "lose"}`}>
-							<Coins size={16} class="stroke-yellow-500" /> Bankroll: {chips}
+						<div class={`chipShimmer flex items-center gap-1 border border-white/10 ${lastChipDelta >= 0 ? "win" : "lose"}`}>
+							<Chip size={14} class="fill-yellow-500" /> Bankroll: {chips}
 						</div>
 					{/key}
 
 					{#if gs.round === "done" && lastChipDelta !== 0}
 						{#key chipDeltaTextId}
-							<div class={`chipDelta absolute -right-2 -top-2 ${lastChipDelta > 0 ? "pos" : "neg"}`}>
+							<div class={`chipDelta absolute -right-2 -top-2 payoutPop ${lastChipDelta > 0 ? "pos" : "neg"}`}>
 								{lastChipDelta > 0 ? "+" : "-"}{Math.abs(lastChipDelta)}
 							</div>
 						{/key}
@@ -292,7 +273,7 @@
 				</div>
 
 				{#key betShimmerId}
-					<div class="chipShimmer flex items-center gap-1 neutral">
+					<div class="chipShimmer flex items-center gap-1 neutral border border-white/10">
 						<HandCoins size={16} class="stroke-rose-500" /> Bet: {bet}
 					</div>
 				{/key}
@@ -396,8 +377,8 @@
 						</button>
 					</div>
 
-					<div class="flex flex-row gap-1 text-xs text-white/45">
-						You can place a max bet of <div class="flex items-center gap-1 neutral"><DiamondPlus size={16} class="stroke-rose-500" />{maxBet}</div>
+					<div class="flex flex-row text-xs text-white/45">
+						<span class="hidden md:inline">You can place a m</span><span class="md:hidden">M</span>ax bet of <div class="flex items-center gap-1 neutral"><Chip size={14} class="ml-1.5 fill-yellow-500" />{maxBet}</div>
 					</div>
 				</div>
 			</div>
@@ -466,10 +447,6 @@
 				Reset Shoe
 			</button>
 		</div>
-
-		{#key payoutKey}
-			<!-- Optional: you can render lastPayout somewhere with .payoutPop if you want -->
-		{/key}
 	</div>
 </div>
 

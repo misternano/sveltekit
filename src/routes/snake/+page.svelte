@@ -3,15 +3,17 @@
 	import { Play, RotateCcw } from "lucide-svelte";
 	import { swipe } from "svelte-gestures";
 	import { onMount } from "svelte";
-	import { State } from "./lib/util";
 
 	onMount(() => {
-		localStorage.setItem(
-			"bkclb_arcade_last_game",
-			JSON.stringify({ id: "snake", name: "Snake", path: "/snake", updatedAt: Date.now() })
-		)
-		console.info("%c> Mounted", "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;");
+		highestScore = parseInt(localStorage.getItem("snake:hiScore") || "0");
+		console.info(`%c> Mounted`, "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem");
 	})
+
+	enum State {
+		Playing,
+		End,
+		Paused
+	}
 
 	let state: State = State.Playing;
 	const squareCount = 20;
@@ -24,10 +26,6 @@
 	let apple: Array<number> | null = null;
 	let highestScore: number;
 	let score: number = 0;
-
-	onMount(() => {
-		highestScore = parseInt(localStorage.getItem("hiScore") || "0");
-	})
 
 	const drawSnake = () => {
 		board = new Array(squareCount)
@@ -78,7 +76,7 @@
 			}
 
 			if (snake.slice(1, snake.length).find(([x, y]) => x == snake[0][0] && y == snake[0][1])) {
-				localStorage.setItem("hiScore", highestScore.toString());
+				localStorage.setItem("snake:hiScore", highestScore.toString());
 				state = State.End;
 				return;
 			}
@@ -119,7 +117,7 @@
 			snake = [[5, 5]];
 			curDir = "YD";
 
-			highestScore = parseInt(localStorage.getItem("hiScore") || "0");
+			highestScore = parseInt(localStorage.getItem("snake:hiScore") || "0");
 			score = 0;
 			state = State.Paused;
 			drawSnake();
@@ -189,11 +187,11 @@
             }
         }
 		}}
-	class="m-8 flex flex-col items-center"
+	class="flex flex-col items-center"
 >
-	<header class="w-full relative my-16">
-		<h1 class="font-impact font-medium text-4xl text-center">
-			Feed <span class="text-xl">the</span> Snake
+	<header class="relative">
+		<h1 class="w-fit font-impact font-medium text-4xl text-center my-16">
+			<span class="bg-gradient-to-b from-green-500 to-green-600 bg-clip-text text-transparent">Feed <span class="text-xl bg-gradient-to-b from-red-500 to-red-600 bg-clip-text text-transparent">the</span> Snake</span>
 		</h1>
 		{#if state === State.End}
 			<div class="-z-10 absolute -top-1/2 md:-translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">

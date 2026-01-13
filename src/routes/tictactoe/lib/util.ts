@@ -24,15 +24,15 @@ export interface BoardEvaluation {
 	winningCells: Coord[];
 }
 
-function isPlayerMove(cell: Cell): cell is Move.X | Move.O {
+const isPlayerMove = (cell: Cell): cell is Move.X | Move.O => {
 	return cell === Move.X || cell === Move.O;
 }
 
-export function opponentOf(move: Move.X | Move.O): Move.X | Move.O {
+export const opponentOf = (move: Move.X | Move.O): Move.X | Move.O => {
 	return move === Move.X ? Move.O : Move.X;
 }
 
-function assertSquareBoard(board: Board): number {
+const assertSquareBoard = (board: Board): number => {
 	if (!Array.isArray(board) || board.length === 0) {
 		throw new Error("Invalid board: expected a non-empty 2D array.");
 	}
@@ -54,11 +54,11 @@ function assertSquareBoard(board: Board): number {
 	return n;
 }
 
-function inBounds(n: number, r: number, c: number): boolean {
+const inBounds = (n: number, r: number, c: number): boolean => {
 	return r >= 0 && r < n && c >= 0 && c < n;
 }
 
-function allFilled(board: Board): boolean {
+const allFilled = (board: Board): boolean => {
 	for (const row of board) {
 		for (const cell of row) {
 			if (cell === Move.Empty) return false;
@@ -67,11 +67,11 @@ function allFilled(board: Board): boolean {
 	return true;
 }
 
-function findWinningLine(
+const findWinningLine = (
 	board: Board,
 	n: number,
 	winLength: number,
-): { winner: Move.X | Move.O; winningCells: Coord[] } | null {
+): { winner: Move.X | Move.O; winningCells: Coord[] } | null => {
 	const directions: ReadonlyArray<readonly [dr: number, dc: number]> = [
 		[0, 1],
 		[1, 0],
@@ -107,7 +107,7 @@ function findWinningLine(
 	return null;
 }
 
-export function evaluateBoard(board: Board, options: EvaluateOptions = {}): BoardEvaluation {
+export const evaluateBoard = (board: Board, options: EvaluateOptions = {}): BoardEvaluation => {
 	const n = assertSquareBoard(board);
 	
 	const winLength = options.winLength ?? Math.min(3, n);
@@ -127,7 +127,7 @@ export function evaluateBoard(board: Board, options: EvaluateOptions = {}): Boar
 	return { state: State.Playing, winner: null, winningCells: [] };
 }
 
-export function checkWinner(board: Board): Move.X | Move.O | undefined {
+export const checkWinner = (board: Board): Move.X | Move.O | undefined => {
 	const result = evaluateBoard(board, { winLength: Math.min(3, assertSquareBoard(board)) });
 	return result.winner ?? undefined;
 }

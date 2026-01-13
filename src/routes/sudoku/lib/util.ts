@@ -8,7 +8,7 @@ export type Cell = {
 
 export type Board = Cell[][]
 
-export function createEmptyBoard(): Board {
+export const createEmptyBoard = (): Board => {
 	return Array.from({ length: SIZE }, () =>
 		Array.from({ length: SIZE }, () => ({
 			value: null,
@@ -20,11 +20,11 @@ export function createEmptyBoard(): Board {
 
 type NumGrid = number[][]
 
-function createEmptyGrid(): NumGrid {
+const createEmptyGrid = (): NumGrid => {
 	return Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
 }
 
-function shuffle<T>(array: T[]): T[] {
+const shuffle = <T>(array: T[]): T[] => {
 	const a = [...array]
 	for (let i = a.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1))
@@ -35,7 +35,7 @@ function shuffle<T>(array: T[]): T[] {
 	return a
 }
 
-function isSafe(grid: NumGrid, row: number, col: number, num: number): boolean {
+const isSafe = (grid: NumGrid, row: number, col: number, num: number): boolean => {
 	for (let i = 0; i < SIZE; i++) {
 		if (grid[row][i] === num) return false
 		if (grid[i][col] === num) return false
@@ -53,7 +53,7 @@ function isSafe(grid: NumGrid, row: number, col: number, num: number): boolean {
 	return true
 }
 
-function findEmpty(grid: NumGrid): [number, number] | null {
+const findEmpty = (grid: NumGrid): [number, number] | null => {
 	for (let r = 0; r < SIZE; r++) {
 		for (let c = 0; c < SIZE; c++) {
 			if (grid[r][c] === 0) return [r, c]
@@ -62,7 +62,7 @@ function findEmpty(grid: NumGrid): [number, number] | null {
 	return null
 }
 
-function fillGrid(grid: NumGrid): boolean {
+const fillGrid = (grid: NumGrid): boolean => {
 	const pos = findEmpty(grid)
 	if (!pos) return true
 	
@@ -80,17 +80,17 @@ function fillGrid(grid: NumGrid): boolean {
 	return false
 }
 
-function generateSolvedGrid(): NumGrid {
+const generateSolvedGrid = (): NumGrid => {
 	const grid = createEmptyGrid()
 	fillGrid(grid)
 	return grid
 }
 
-function cloneGrid(grid: NumGrid): NumGrid {
+const cloneGrid = (grid: NumGrid): NumGrid => {
 	return grid.map((row) => [...row])
 }
 
-function makePuzzleFromSolution(solution: NumGrid, holes: number): NumGrid {
+const makePuzzleFromSolution = (solution: NumGrid, holes: number): NumGrid => {
 	const grid = cloneGrid(solution)
 	let removed = 0
 	
@@ -107,7 +107,7 @@ function makePuzzleFromSolution(solution: NumGrid, holes: number): NumGrid {
 	return grid
 }
 
-export function generatePuzzleBoard(holes = 81-16): Board {
+export const generatePuzzleBoard = (holes = 81-22): Board => {
 	const solved = generateSolvedGrid()
 	const puzzle = makePuzzleFromSolution(solved, holes)
 	

@@ -1,15 +1,12 @@
-<!-- src/routes/tictactoe/+page.svelte -->
 <script lang="ts">
 	import { Move, State, evaluateBoard, opponentOf } from "./lib/util"
 	import { Icon } from "./components"
 	import { onDestroy, onMount, tick } from "svelte"
-	import { ChevronDown, Loader } from "lucide-svelte"
+	import { ArrowBigRight, ChevronDown, LoaderCircle } from "lucide-svelte"
 
 	onMount(() => {
-		localStorage.setItem(
-			"bkclb_arcade_last_game",
-			JSON.stringify({ id: "tictactoe", name: "Tic-Tac-Toe", path: "/tictactoe", updatedAt: Date.now() })
-		)
+		window.addEventListener("resize", onResize)
+		console.info(`%c> Mounted`, "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem");
 	})
 
 	let boardEl: HTMLElement
@@ -427,10 +424,6 @@
 	$: me = youAre ? players.find((p) => p.mark === youAre)?.name ?? userName : userName
 	$: opponent = youAre ? players.find((p) => p.mark !== youAre)?.name : undefined
 
-	onMount(() => {
-		window.addEventListener("resize", onResize)
-	})
-
 	onDestroy(() => {
 		window.removeEventListener("resize", onResize)
 
@@ -449,7 +442,9 @@
 </script>
 
 <header class="relative">
-	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">Tic-Tac-Toe</h1>
+	<h1 class="flex flex-row gap-1 w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
+		<span class="-rotate-3 bg-gradient-to-b from-rose-300 to-rose-400 bg-clip-text text-transparent">Tic</span>-<span class="rotate-1 bg-gradient-to-b from-emerald-300 to-emerald-400 bg-clip-text text-transparent">Tac</span>-<span class="-rotate-2 bg-gradient-to-b from-sky-300 to-sky-400 bg-clip-text text-transparent">Toe</span>
+	</h1>
 
 	{#if state === State.Won}
 		<div class="-z-10 absolute -top-1/2 -translate-y-1/4 w-full text-center font-medium bg-gradient-to-b from-emerald-500/75 to-neutral-900 bg-clip-text text-transparent">
@@ -502,7 +497,7 @@
 	</div>
 
 	<div
-		class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] rounded-xl overflow-hidden"
+		class="relative w-fit mx-auto grid grid-cols-3 grid-rows-3 gap-0.5 bg-[#171717] border border-white rounded-xl overflow-hidden"
 		bind:this={boardEl}
 		on:pointermove={onBoardPointerMove}
 		on:pointerleave={onBoardPointerLeave}
@@ -619,7 +614,7 @@
 			<div class="font-semibold">{me}</div>
 			<div class="text-neutral-400">{opponent ? `vs ${opponent}` : "Waiting for opponent…"}</div>
 		</div>
-		<div class="flex flex-wrap items-center gap-2">
+		<div class="flex flex-col lg:flex-row items-center justify-center gap-2">
 			<button
 				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 				on:click|preventDefault={async () => {
@@ -632,16 +627,22 @@
 					<span class="tracking-[0.25em] uppercase font-mono">{roomCode}</span>
 				{:else}
 					{#if ws?.readyState === WebSocket.CONNECTING}
-						<Loader size="16" class="animate-spin" />
+						<LoaderCircle size="16" class="animate-spin" />
 					{/if}
 					Create Room
 				{/if}
 			</button>
-
-			<div class={`${roomCode && "hidden"} flex items-center gap-2`}>
+			<div class="my-3 w-3/4 lg:w-fit flex items-center gap-2">
+				<div class="flex-1 border-t border-slate-300/70" />
+					<span class="shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-300/70">
+                        OR
+                    </span>
+				<div class="flex-1 border-t border-slate-300/70" />
+			</div>
+			<div class={`${roomCode && "hidden"} flex items-stretch gap-2`}>
 				<input
 					class="w-44 px-3 py-2 rounded-md bg-neutral-800 text-white outline-none ring-1 ring-neutral-700 focus:ring-2 focus:ring-indigo-400 tracking-[0.35em] text-center uppercase"
-					placeholder="JOIN"
+					placeholder="CODE"
 					value={joinCode}
 					on:input={onJoinInput}
 					maxlength="6"
@@ -654,7 +655,7 @@
 					on:click={joinRoom}
 					disabled={joinCode.length !== 6}
 				>
-					Join
+					<ArrowBigRight size={16} />
 				</button>
 			</div>
 		</div>
