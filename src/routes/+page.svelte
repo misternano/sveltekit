@@ -5,34 +5,27 @@
 	import { goto } from "$app/navigation";
 	import { lastGame } from "$lib/lastGame";
 	import { GAMES, type GameMeta } from "$lib/game";
+	import type { PageData } from "./$types"
 
-	type UpdateItem = {
-		date: string;
-		title: string;
-		description?: string;
-		path?: string;
-	};
+	export let data: PageData;
+	const updates = data.updates ?? []
+
+	function daysAgoLabel(ymd: string): string {
+		const [y, m, d] = ymd.split("-").map(Number);
+		if (!y || !m || !d) return "";
+
+		const commitUtcMidnight = Date.UTC(y, m - 1, d);
+		const now = new Date();
+		const todayUtcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+		const diffDays = Math.floor((todayUtcMidnight - commitUtcMidnight) / 86_400_000);
+
+		if (diffDays <= 0) return "today";
+		if (diffDays === 1) return "1 day ago";
+		return `${diffDays} days ago`;
+	}
 
 	let dailyGame: GameMeta = GAMES[0];
-
-	const UPDATES: UpdateItem[] = [
-		{
-			date: "2026-01-14",
-			title: "Black Jack released!",
-			description: "Classic rules, fast rounds, no fluff.",
-			path: "/blackjack"
-		},
-		{
-			date: "2026-01-12",
-			title: "UI polish pass",
-			description: "Smoother focus/hover states and spacing."
-		},
-		{
-			date: "2026-01-10",
-			title: "Daily challenge added",
-			description: "A different game each day."
-		}
-	];
 
 	const computeDailyGame = () => {
 		const today = new Date();
@@ -124,30 +117,50 @@
 			</div>
 
 			<ul class="flex flex-col gap-3">
-				{#each UPDATES as u (u.date + u.title)}
-					<li class="flex items-start justify-between gap-6">
-						<div class="min-w-0">
-							{#if u.path}
-								<button
-									type="button"
-									class="text-left text-neutral-200 hover:text-white transition-colors truncate"
-									on:click={() => goto(u.path)}
+				{#each updates as u (u.sha)}
+					<li class="group rounded-xl border border-white/10 bg-neutral-950/30 hover:bg-neutral-950/50 transition-colors overflow-hidden">
+						<div class="flex items-stretch gap-4 p-4">
+							<div class="flex items-center gap-3 min-w-0">
+								<img
+									alt={u.author.login}
+									src={u.author.avatar_url}
+									class="w-10 h-10 rounded-full border border-white/10 bg-neutral-900 shrink-0"
+									loading="lazy"
+									referrerpolicy="no-referrer"
+								/>
+								<div class="min-w-0">
+									<p class="text-neutral-200 text-sm font-medium truncate">@{u.author.login}</p>
+									<p class="text-neutral-600 text-xs tabular-nums">{u.date} ({daysAgoLabel(u.date)})</p>
+								</div>
+							</div>
+							<div class="w-[1px] bg-white/10" />
+							<div class="flex-1 min-w-0 flex items-start justify-between gap-4">
+								<div class="min-w-0">
+									{#if u.url}
+										<a class="text-neutral-200 hover:text-white transition-colors text-sm font-semibold truncate block" href={u.url} target="_blank" rel="noreferrer">
+											{u.title}
+										</a>
+									{:else}
+										<span class="text-neutral-200 text-sm font-semibold truncate block">{u.title}</span>
+									{/if}
+
+									{#if u.description}
+										<div class="text-neutral-500 text-xs mt-1 line-clamp-2">{u.description}</div>
+									{/if}
+								</div>
+
+								<span
+									class="shrink-0 text-neutral-600 text-xs tabular-nums border border-white/10 rounded-md px-2 py-1 bg-neutral-900/40"
+									title="Commit"
 								>
-									{u.title}
-								</button>
-							{:else}
-								<span class="text-neutral-200 truncate">{u.title}</span>
-							{/if}
-
-							{#if u.description}
-								<div class="text-neutral-600 text-xs mt-1">{u.description}</div>
-							{/if}
+						{u.sha.slice(0, 7)}
+					</span>
+							</div>
 						</div>
-
-						<span class="text-neutral-700 text-xs tabular-nums whitespace-nowrap">{u.date}</span>
 					</li>
 				{/each}
 			</ul>
+
 		</div>
 	</section>
 </main>
