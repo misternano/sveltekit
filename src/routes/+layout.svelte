@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "../app.css";
-	import { Zap, X, Menu, ChevronLeft, ChevronRight, ArrowBigLeft } from "lucide-svelte";
+	import { Zap, X, Menu, ChevronLeft, ChevronRight, ArrowBigLeft, CircleQuestionMark } from "lucide-svelte";
 	import { NavBarGames } from "./components";
 	import { page } from "$app/stores";
 	import { syncLastGameFromPath } from "$lib/game";
@@ -71,13 +71,7 @@
 	style={`--sidebar-w:${sidebarWidth};`}
 	aria-label="Primary navigation"
 >
-	<div
-		class={cn(
-			"flex h-full w-full flex-col overflow-hidden",
-			"rounded-2xl bg-white/70 backdrop-blur-md shadow-lg ring-1 ring-black/5",
-			"dark:bg-slate-900/60 dark:ring-white/10"
-		)}
-	>
+	<div class="flex h-full w-full flex-col overflow-hidden rounded-2xl bg-slate-900/60 backdrop-blur-md shadow-lg ring-1 ring-white/10">
 		<div
 			class={cn(
 				"flex-1 p-2",
@@ -121,26 +115,34 @@
 					{/if}
 				</a>
 
-				<button
-					type="button"
-					on:click={toggleCollapsed}
-					class={cn(
-						"inline-flex items-center gap-2 rounded-xl px-3 py-2",
-						"text-slate-700 transition hover:bg-black/5 active:scale-[0.98]",
-						"dark:text-slate-200 dark:hover:bg-white/10",
+				<div class="flex flex-row gap-2 justify-between items-stretch">
+					<button
+						type="button"
+						on:click={toggleCollapsed}
+						class={cn(
+						"inline-flex flex-grow items-center gap-2 rounded-xl px-3 py-2",
+						"text-slate-200 transition hover:bg-white/10 active:scale-[0.98]",
 						collapsed && "justify-center px-2"
 					)}
-					aria-label={collapsed ? "Expand menu" : "Collapse menu"}
-					aria-pressed={collapsed}
-				>
-					{#if collapsed}
-						<ChevronRight size="18" />
-						<span class="hidden">Expand</span>
-					{:else}
-						<ChevronLeft size="18" />
-						<span>Collapse</span>
-					{/if}
-				</button>
+						aria-label={collapsed ? "Expand menu" : "Collapse menu"}
+						aria-pressed={collapsed}
+					>
+						{#if collapsed}
+							<ChevronRight size="18" />
+							<span class="hidden">Expand</span>
+						{:else}
+							<ChevronLeft size="18" />
+							<span>Collapse</span>
+						{/if}
+					</button>
+					<a
+						href="/about"
+						class="group inline-flex items-center gap-2 rounded-xl hover:bg-white/10 px-3 text-sm font-bold text-black transition active:scale-[0.98]"
+						class:hidden={collapsed}
+					>
+						<CircleQuestionMark size={20} class="stroke-indigo-500 group-hover:stroke-[#ecba16] group-hover:rotate-6 transition-all" />
+					</a>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -148,9 +150,7 @@
 
 <nav class="fixed inset-x-0 top-3 z-50 px-3 sm:px-6 md:hidden">
 	<div class="mx-auto max-w-6xl">
-		<div
-			class="flex items-center justify-between rounded-2xl bg-white/70 backdrop-blur-md shadow-lg ring-1 ring-black/5 dark:bg-slate-900/60 dark:ring-white/10 px-2 py-2 sm:px-3"
-		>
+		<div class="flex items-center justify-between rounded-2xl bg-white/70 backdrop-blur-md shadow-lg ring-1 ring-black/5 bg-slate-900/60 ring-white/10 px-2 py-2 sm:px-3">
 			<a
 				href="/"
 				class="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ecba16] to-amber-500 px-3 py-2 text-sm font-semibold text-black shadow-sm transition hover:shadow-md active:scale-[0.98]"
@@ -167,7 +167,7 @@
 
 			<button
 				type="button"
-				class="md:hidden inline-flex items-center justify-center rounded-xl px-3 py-2 text-slate-700 transition hover:bg-black/5 active:scale-[0.98] dark:text-slate-200 dark:hover:bg-white/10"
+				class="md:hidden inline-flex items-center justify-center rounded-xl px-3 py-2 text-slate-700 transition hover:bg-black/5 active:scale-[0.98] text-slate-200 hover:bg-white/10"
 				aria-label={open ? "Close menu" : "Open menu"}
 				aria-expanded={open}
 				on:click={toggle}

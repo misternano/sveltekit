@@ -1,23 +1,50 @@
 <script lang="ts">
 	import "../app.css";
-	import { onMount } from "svelte"
-	import { Sparkles, Clock, RotateCcw } from "lucide-svelte"
-	import { goto } from "$app/navigation"
-	import { lastGame } from "$lib/lastGame"
+	import { onMount } from "svelte";
+	import { Sparkles, Clock, RotateCcw } from "lucide-svelte";
+	import { goto } from "$app/navigation";
+	import { lastGame } from "$lib/lastGame";
 	import { GAMES, type GameMeta } from "$lib/game";
 
-	let dailyGame: GameMeta = GAMES[0]
+	type UpdateItem = {
+		date: string;
+		title: string;
+		description?: string;
+		path?: string;
+	};
+
+	let dailyGame: GameMeta = GAMES[0];
+
+	const UPDATES: UpdateItem[] = [
+		{
+			date: "2026-01-14",
+			title: "Black Jack released!",
+			description: "Classic rules, fast rounds, no fluff.",
+			path: "/blackjack"
+		},
+		{
+			date: "2026-01-12",
+			title: "UI polish pass",
+			description: "Smoother focus/hover states and spacing."
+		},
+		{
+			date: "2026-01-10",
+			title: "Daily challenge added",
+			description: "A different game each day."
+		}
+	];
 
 	const computeDailyGame = () => {
-		const today = new Date()
-		const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
-		const index = seed % GAMES.length
-		return GAMES[index]
-	}
+		const today = new Date();
+		const seed =
+			today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+		const index = seed % GAMES.length;
+		return GAMES[index];
+	};
 
 	onMount(() => {
-		dailyGame = computeDailyGame()
-	})
+		dailyGame = computeDailyGame();
+	});
 </script>
 
 <main class="min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16">
@@ -30,10 +57,12 @@
 		<h1 class="relative font-impact text-6xl sm:text-7xl md:text-8xl tracking-wide bg-gradient-to-b from-white to-neutral-500 bg-clip-text text-transparent">
 			BKCLB Arcade
 		</h1>
+
 		<p class="text-neutral-400 max-w-xl text-sm sm:text-base">
 			Minimal, fast arcade games with no ads, no tracking, and no distractions.
 		</p>
 	</section>
+
 	<section class="w-full max-w-4xl flex flex-col gap-6">
 		{#if $lastGame}
 			<div class="flex flex-col md:flex-row gap-4 items-stretch">
@@ -46,13 +75,10 @@
 						<RotateCcw size="20" />
 						<span class="uppercase text-xs tracking-[0.2em]">Resume</span>
 					</span>
-					<span class="text-xl font-semibold text-white">
-						Continue {$lastGame.name}
-					</span>
-					<span class="mt-1 text-neutral-300 text-sm">
-						Pick up right where you left off.
-					</span>
+					<span class="text-xl font-semibold text-white">Continue {$lastGame.name}</span>
+					<span class="mt-1 text-neutral-300 text-sm">Pick up right where you left off.</span>
 				</button>
+
 				<button
 					type="button"
 					class="md:w-64 rounded-2xl border border-indigo-500/40 bg-gradient-to-br from-indigo-600/30 via-indigo-500/10 to-neutral-900 px-6 py-5 text-left hover:-translate-y-1 hover:shadow-2xl transition-all focus:outline-none focus:ring-0"
@@ -62,12 +88,8 @@
 						<Clock size="20" />
 						<span class="uppercase text-xs tracking-[0.2em]">Daily challenge</span>
 					</span>
-					<span class="text-lg font-semibold text-white">
-						{dailyGame.name}
-					</span>
-					<span class="mt-1 text-neutral-300 text-sm">
-						{dailyGame.tagline}
-					</span>
+					<span class="text-lg font-semibold text-white">{dailyGame.name}</span>
+					<span class="mt-1 text-neutral-300 text-sm">{dailyGame.tagline}</span>
 				</button>
 			</div>
 		{:else}
@@ -81,20 +103,51 @@
 						<Clock size="20" />
 						<span class="uppercase text-xs tracking-[0.2em]">Daily challenge</span>
 					</span>
-					<span class="text-xl font-semibold text-white">
-						{dailyGame.name}
-					</span>
-					<span class="mt-1 text-neutral-300 text-sm">
-						{dailyGame.tagline}
-					</span>
+					<span class="text-xl font-semibold text-white">{dailyGame.name}</span>
+					<span class="mt-1 text-neutral-300 text-sm">{dailyGame.tagline}</span>
 				</button>
 			</div>
 		{/if}
+
 		<p class="mx-auto text-neutral-500 text-xs sm:text-sm uppercase tracking-[0.3em] animate-pulse">
 			Or pick a game from the top bar
 		</p>
+
 		<div class="mt-8 text-center text-neutral-600 text-xs sm:text-sm">
 			<p>No accounts. No leaderboards. Just arcade games that load instantly.</p>
+		</div>
+
+		<div class="mt-10 rounded-2xl border border-neutral-800 bg-neutral-950/40 p-6">
+			<div class="flex items-baseline justify-between gap-4 mb-4">
+				<h2 class="text-neutral-400 text-xs tracking-[0.25em]">New / Updated | <a href="https://github.com/misternano/sveltekit" target="norel noopen" class="underline text-[#ecba16]/90 tracking-normal">GitHub</a></h2>
+				<span class="text-neutral-700 text-xs">Latest changes</span>
+			</div>
+
+			<ul class="flex flex-col gap-3">
+				{#each UPDATES as u (u.date + u.title)}
+					<li class="flex items-start justify-between gap-6">
+						<div class="min-w-0">
+							{#if u.path}
+								<button
+									type="button"
+									class="text-left text-neutral-200 hover:text-white transition-colors truncate"
+									on:click={() => goto(u.path)}
+								>
+									{u.title}
+								</button>
+							{:else}
+								<span class="text-neutral-200 truncate">{u.title}</span>
+							{/if}
+
+							{#if u.description}
+								<div class="text-neutral-600 text-xs mt-1">{u.description}</div>
+							{/if}
+						</div>
+
+						<span class="text-neutral-700 text-xs tabular-nums whitespace-nowrap">{u.date}</span>
+					</li>
+				{/each}
+			</ul>
 		</div>
 	</section>
 </main>

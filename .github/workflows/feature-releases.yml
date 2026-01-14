@@ -1,0 +1,53 @@
+name: Feature Releases
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release_if_feature:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create release for [feature] commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Grab the commit message subject (first line)
+          SUBJECT="$(git log -1 --pretty=%s)"
+
+          # Only release on "[feature] ..."
+          if [[ "${SUBJECT}" != \[feature\]* ]]; then
+            echo "Not a [feature] commit. Skipping."
+            exit 0
+          fi
+
+          # Strip the prefix and any extra spaces after it
+          TITLE="${SUBJECT#\[feature\]}"
+          TITLE="$(echo "$TITLE" | sed -E 's/^[[:space:]]+//')"
+
+          # Tag: stable + unique per commit
+          SHORT_SHA="$(git rev-parse --short=7 HEAD)"
+          TAG="feature-${SHORT_SHA}"
+
+          # Avoid duplicate releases if rerun
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Skipping."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$TITLE" \
+            --notes ""

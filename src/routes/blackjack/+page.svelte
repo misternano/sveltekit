@@ -326,7 +326,7 @@
 				<div class="grid grid-cols-[auto,1fr,auto] gap-3 items-center">
 					<div class="inline-flex rounded-lg overflow-hidden border border-white/10 bg-white/5">
 						<button
-							class="px-3 py-2 text-sm text-white/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
+							class="px-3 py-2 text-sm text-rose-400/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
 							on:click={() => bumpBet(-5)}
 							disabled={!canDeal}
 							aria-label="Decrease bet by 5"
@@ -335,7 +335,7 @@
 						</button>
 						<div class="w-px bg-white/10"></div>
 						<button
-							class="px-3 py-2 text-sm text-white/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
+							class="px-3 py-2 text-sm text-rose-400/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
 							on:click={() => bumpBet(-1)}
 							disabled={!canDeal}
 							aria-label="Decrease bet by 1"
@@ -358,14 +358,14 @@
 								disabled={!canDeal}
 								aria-label="Bet amount"
 							/>
-							<div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/40">
-								chips
+							<div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+								<Chip size={16} class="fill-white/40" />
 							</div>
 						</div>
 
 						<div class="inline-flex rounded-lg overflow-hidden border border-white/10 bg-white/5">
 							<button
-								class="px-3 py-2 text-sm text-white/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
+								class="px-3 py-2 text-sm text-emerald-400/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
 								on:click={() => bumpBet(1)}
 								disabled={!canDeal}
 								aria-label="Increase bet by 1"
@@ -374,7 +374,7 @@
 							</button>
 							<div class="w-px bg-white/10"></div>
 							<button
-								class="px-3 py-2 text-sm text-white/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
+								class="px-3 py-2 text-sm text-emerald-400/90 hover:bg-white/10 active:scale-[0.98] transition disabled:opacity-50"
 								on:click={() => bumpBet(5)}
 								disabled={!canDeal}
 								aria-label="Increase bet by 5"

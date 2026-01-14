@@ -189,8 +189,8 @@
 		}}
 	class="flex flex-col items-center"
 >
-	<header class="relative">
-		<h1 class="w-fit font-impact font-medium text-4xl text-center my-16">
+	<header class="w-full relative my-16">
+		<h1 class="font-impact font-medium text-4xl text-center">
 			<span class="bg-gradient-to-b from-green-500 to-green-600 bg-clip-text text-transparent">Feed <span class="text-xl bg-gradient-to-b from-red-500 to-red-600 bg-clip-text text-transparent">the</span> Snake</span>
 		</h1>
 		{#if state === State.End}
