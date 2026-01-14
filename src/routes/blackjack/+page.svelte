@@ -6,6 +6,11 @@
 	import { HandCoins, Spade } from "lucide-svelte"
 
 	onMount(() => {
+		debug = readDebug()
+		debugTimer = window.setInterval(() => {
+			const next = readDebug()
+			if (next !== debug) debug = next
+		}, 200)
 		try {
 			const raw = localStorage.getItem("blackjack:chips")
 			const parsed = raw ? Number(raw) : NaN
@@ -228,7 +233,43 @@
 		setBetSafe(bet)
 	}
 
+	let debug = false
+	let debugTimer: number
+
+	const readDebug = () => localStorage.getItem("blackjack:debug") === "1"
+
+	onDestroy(() => window.clearInterval(debugTimer))
+
+	$: reqRoundPlaying = canPlay
+	$: reqTwoCards = cur.length === 2
+	$: reqPair =
+		reqTwoCards &&
+		(cur[0]?.rank === cur[1]?.rank ||
+			(rules.allowTenValueSplit &&
+				cur[0] && cur[1] &&
+					isTenValue(cur[0].rank) &&
+					isTenValue(cur[1].rank)))
+	$: reqBetCap = totalBet + add <= MAX_TOTAL_BET
+	$: reqChips = chips >= add
 </script>
+
+{#if debug}
+	<div class="w-1/6 absolute right-3 text-xs text-white/70 border border-white/10 bg-white/5 rounded-lg p-3 space-y-1">
+		<div class="flex justify-between">
+			<span>Split requirements</span>
+			<span class={canSplit ? "text-emerald-200" : "text-rose-200"}>canSplit: {String(canSplit)}</span>
+		</div>
+		<br />
+		<div class="flex justify-between"><span class="text-yellow-100">round === playing</span><span>{String(reqRoundPlaying)} ({gs.round})</span></div>
+		<div class="flex justify-between"><span class="text-yellow-100">hand has 2 cards</span><span>{String(reqTwoCards)} (len {cur.length})</span></div>
+		<div class="flex justify-between"><span class="text-yellow-100">pair matches (rank/ten-value)</span><span>{String(reqPair)}</span></div>
+		<div class="flex justify-between"><span class="text-yellow-100">totalBet + add ≤ {MAX_TOTAL_BET}</span><span>{String(reqBetCap)} ({totalBet + add})</span></div>
+		<div class="flex justify-between"><span class="text-yellow-100">chips ≥ add</span><span>{String(reqChips)} ({chips} ≥ {add})</span></div>
+		<br />
+		<div class="flex justify-between"><span class="text-yellow-100">shoe remaining:</span><span>{gs.shoe.length}</span></div>
+		<div class="flex justify-between"><span class="text-yellow-100">discard:</span><span>{gs.discard.length}</span></div>
+	</div>
+{/if}
 
 <header class="relative">
 	<h1 class="flex flex-row gap-1 items-center w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
