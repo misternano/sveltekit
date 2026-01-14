@@ -2,14 +2,14 @@
 	import { createEventDispatcher } from "svelte";
 	import { page } from "$app/stores";
 	import { Grid2x2Check, LayoutGrid, Spade, Worm } from "lucide-svelte";
-	import { GAMES, type GameId } from "$lib/game"
+	import { GAMES, type GameId, normalizePathname } from "$lib/game"
 
 	const dispatch = createEventDispatcher<{ navigate: void }>();
 	const onNavigate = () => dispatch("navigate");
 
 	export let collapsed = false;
 
-	$: pathname = $page.url.pathname;
+	$: pathname = normalizePathname($page.url.pathname);
 
 	const iconMap: Record<GameId, typeof LayoutGrid> = {
 		tictactoe: LayoutGrid,

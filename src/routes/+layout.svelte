@@ -3,7 +3,7 @@
 	import { Zap, X, Menu, ChevronLeft, ChevronRight, ArrowBigLeft, CircleQuestionMark } from "lucide-svelte";
 	import { NavBarGames } from "./components";
 	import { page } from "$app/stores";
-	import { syncLastGameFromPath } from "$lib/game";
+	import { normalizePathname, syncLastGameFromPath } from "$lib/game";
 	import { afterNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 
@@ -49,7 +49,7 @@
 		return classes.filter(Boolean).join(" ");
 	}
 
-	$: syncLastGameFromPath($page.url.pathname);
+	$: syncLastGameFromPath(normalizePathname($page.url.pathname));
 
 	$: sidebarWidth = collapsed ? "4.25rem" : "15.5rem";
 </script>
@@ -106,7 +106,7 @@
 						collapsed && "justify-center px-2"
 					)}
 				>
-					{#if $page.url.pathname === "/"}
+					{#if normalizePathname($page.url.pathname) === "/"}
 						<Zap size="16" class="fill-black stroke-black transition group-hover:scale-110" />
 						<span class={cn("block", collapsed && "hidden")}>BKCLB.dev Arcade</span>
 					{:else}
@@ -156,7 +156,7 @@
 				class="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ecba16] to-amber-500 px-3 py-2 text-sm font-semibold text-black shadow-sm transition hover:shadow-md active:scale-[0.98]"
 				on:click={close}
 			>
-				{#if $page.url.pathname === "/"}
+				{#if normalizePathname($page.url.pathname) === "/"}
 					<Zap size="16" class="fill-black stroke-black transition group-hover:scale-110" />
 					<span class="hidden sm:block">BKCLB.dev</span>
 				{:else}
