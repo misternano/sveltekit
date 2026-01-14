@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ fetch, setHeaders }) => {
 	});
 
 	const token = env.GITHUB_TOKEN;
-	const url = `https://api.github.com/repos/misternano/svelte/releases?per_page=5`;
+	const url = `https://api.github.com/repos/misternano/sveltekit/releases?per_page=5`;
 
 	const res = await fetch(url, {
 		headers: {
