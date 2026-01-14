@@ -208,7 +208,7 @@
 			<div class="absolute inset-0 top-6 bg-black/50">
 				<div class="h-full flex flex-col gap-4 justify-center items-center">
 					<h1 class="text-4xl text-center font-impact tracking-widest">{state === State.Paused ? "PAUSED" : "YOU DIED"}</h1>
-					<button on:click={togglePause} class="mx-auto flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all">
+					<button on:click={togglePause} class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60">
 						{#if state === State.Paused}
 							<Play class="fill-white" size="16" />
 						{:else}
@@ -216,15 +216,10 @@
 						{/if}
 						<span class="uppercase">{state === State.Paused ? "Resume" : "Restart"}</span>
 					</button>
-					<div class="hidden md:block"><p class="text-center text-xs">or press <span class="text-md font-anton text-indigo-500">SPACE</span></p></div>
+					<div class="hidden md:block"><p class="text-center text-xs">or press <span class="text-md font-impact text-indigo-500">SPACE</span></p></div>
 				</div>
 			</div>
 		{/if}
 	</div>
-	<button on:click={togglePause} class={`${state === State.Paused && "hidden"} mx-auto mt-6 flex flex-row gap-2 items-center p-1 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-white text-md font-anton rounded-md active:scale-95 transition-all`}>Pause</button>
+	<button on:click={togglePause} class={`${state === State.Paused && "hidden"} mt-6 flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60`}>Pause</button>
 </div>
-<style>
-	:global(body) {
-		@apply bg-neutral-900 text-[#cccccc];
-	}
-</style>

@@ -10,7 +10,7 @@
 	{#each Array(9) as _, i}
 		<button
 			type="button"
-			class="p-2 px-4 bg-indigo-500 hover:ring ring-indigo-300 text-lg md:text-2xl text-white rounded-md active:scale-95 transition-all"
+			class=" flex flex-row text-2xl items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 			on:click={() => onNumberSelect(i + 1)}
 		>
 			{i + 1}
@@ -18,7 +18,7 @@
 	{/each}
 	<button
 		type="button"
-		class={`p-1 px-3 bg-indigo-500 hover:ring ring-indigo-300 text-white rounded-md active:scale-95 transition-all flex items-center justify-center ${noteMode === true ? "bg-indigo-700  ring" : ""}`}
+		class={`flex flex-row items-center gap-2 px-2.5 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60 ${noteMode && "bg-indigo-700 ring"}`}
 		on:click={toggleNoteMode}
 		aria-pressed={noteMode}
 		aria-label="Toggle note mode"
