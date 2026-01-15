@@ -53,7 +53,7 @@
 
 <main class="max-w-[90vw] mx-auto min-h-screen flex flex-col items-center mt-20 md:mt-16 mb-6">
 	<section class="relative w-full max-w-3xl">
-		<div class="hidden xl:block absolute -left-52 -z-10 rounded-full p-5 bg-black/10 border border-neutral-800 hover:border-indigo-500/40 hover:bg-neutral-900/80 transition-all group">
+		<div class="hidden xl:block absolute -left-60 top-10 -z-10 rounded-full p-5 bg-black/10 border border-neutral-800 hover:border-indigo-500/40 hover:bg-neutral-900/80 transition-all group">
 			<ShieldQuestionMark size={150} class="stroke-indigo-500 -rotate-12 opacity-80 group-hover:opacity-100 transition-opacity" />
 		</div>
 

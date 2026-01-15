@@ -42,9 +42,9 @@
 
 <main class="min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16">
 	<section class="flex flex-col items-center text-center gap-4 mb-12">
-		<div class="flex items-center gap-3 text-indigo-300 uppercase tracking-[0.25em] text-xs">
+		<div class="flex items-center gap-3 text-indigo-300 tracking-[0.25em] text-xs">
 			<Sparkles size="16" />
-			<span>Black Jack released!</span>
+			<span>me when i click bombs</span>
 			<Sparkles size="16" />
 		</div>
 		<h1 class="relative font-impact text-6xl sm:text-7xl md:text-8xl tracking-wide bg-gradient-to-b from-white to-neutral-500 bg-clip-text text-transparent">
