@@ -46,14 +46,10 @@
 	on:mouseenter={() => onHover?.()}
 	on:mouseleave={() => onLeave?.()}
 	class={[
-		"select-none",
-		"flex items-center justify-center",
-		"w-8 h-8 md:w-9 md:h-9",
-		"rounded-md",
-		"ring-1",
+		"select-none flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-md border border-white/10",
 		cell.revealed
-			? "bg-neutral-900/60 ring-neutral-700"
-			: "bg-neutral-800 ring-neutral-700 hover:ring-neutral-500 active:scale-[0.98]",
+			? "bg-neutral-900/60"
+			: "bg-white/5 hover:border-white/25 active:scale-[0.98]",
 		status === "lost" && cell.mine ? "bg-red-900/60 ring-red-700" : ""
 	].join(" ")}
 	disabled={status === "won" || status === "lost"}

@@ -14,7 +14,7 @@
 
 <div class="overflow-auto max-w-full">
 	<div
-		class="grid gap-1 p-2 rounded-xl bg-neutral-950/40 ring-1 ring-neutral-800 w-fit mx-auto"
+		class="grid gap-1 p-2 rounded-xl bg-white/5 border border-white/10 w-fit mx-auto"
 		style={`grid-template-columns: repeat(${grid[0]?.length ?? 0}, minmax(0, 1fr));`}
 	>
 		{#each grid as row, r}
