@@ -211,7 +211,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<header class="relative">
+<header class="relative mt-32 md:mt-0">
 	<h1 class="w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		{#each title as l}
 		<span

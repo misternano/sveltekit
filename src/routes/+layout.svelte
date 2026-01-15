@@ -150,7 +150,7 @@
 
 <nav class="fixed inset-x-0 top-3 z-50 px-3 sm:px-6 md:hidden">
 	<div class="mx-auto max-w-6xl">
-		<div class="flex items-center justify-between rounded-2xl bg-white/70 backdrop-blur-md shadow-lg ring-1 ring-black/5 bg-slate-900/60 ring-white/10 px-2 py-2 sm:px-3">
+		<div class="flex items-center justify-between rounded-2xl backdrop-blur-md shadow-lg ring-1 ring-black/5 bg-slate-900/60 ring-white/10 px-2 py-2 sm:px-3">
 			<a
 				href="/"
 				class="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ecba16] to-amber-500 px-3 py-2 text-sm font-semibold text-black shadow-sm transition hover:shadow-md active:scale-[0.98]"
@@ -184,7 +184,7 @@
 			<div class="md:hidden mt-2 rounded-2xl bg-slate-900/70 backdrop-blur-md shadow-lg ring-1 ring-white/10 p-2">
 				<button
 					class={cn(
-						"flex flex-row gap-2",
+						"flex flex-row gap-2 flex-wrap",
 						"[&_a]:flex [&_a]:items-center [&_a]:justify-between [&_a]:gap-3",
 						"[&_a]:rounded-xl [&_a]:px-4 [&_a]:py-3",
 						"[&_a]:text-base [&_a]:font-semibold",

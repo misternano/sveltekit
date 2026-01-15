@@ -4,7 +4,7 @@
 </script>
 
 <div
-	class={`w-[19px] md:w-[25px] aspect-square border-[0.5px] border-dotted border-neutral-600
+	class={`w-[19px] md:w-[25px] aspect-square border-[0.5px] border-white/10
 		${isHead
 			? "bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-lg scale-110 scale-110 z-10"
 			: object === "S"

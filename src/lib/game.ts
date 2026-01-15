@@ -1,6 +1,6 @@
 import { setLastGame } from "./lastGame"
 
-export type GameId = "sudoku" | "tictactoe" | "snake" | "blackjack"
+export type GameId = "sudoku" | "tictactoe" | "snake" | "blackjack" | "minesweeper"
 
 export type GameMeta = {
 	slug: GameId
@@ -11,16 +11,16 @@ export type GameMeta = {
 
 export const GAMES: GameMeta[] = [
 	{
-		slug: "sudoku",
-		name: "Sudoku",
-		path: "/sudoku",
-		tagline: "Daily logic, clean interface, full keyboard support."
-	},
-	{
 		slug: "tictactoe",
 		name: "Tic-Tac-Toe",
 		path: "/tictactoe",
 		tagline: "Quick online duels — read the board, steal the win."
+	},
+	{
+		slug: "sudoku",
+		name: "Sudoku",
+		path: "/sudoku",
+		tagline: "Daily logic, clean interface, full keyboard support."
 	},
 	{
 		slug: "snake",
@@ -33,13 +33,19 @@ export const GAMES: GameMeta[] = [
 		name: "Black Jack",
 		path: "/blackjack",
 		tagline: "Hit, stand, double — chase 21 without busting."
+	},
+	{
+		slug: "minesweeper",
+		name: "Minesweeper",
+		path: "/minesweeper",
+		tagline: "Clear the grid. Trust the numbers. Don't explode."
 	}
 ] as const
 
 export const normalizePathname = (pathname: string): string => {
 	if (!pathname) return "/";
 	if (pathname === "/") return "/";
-	return pathname.replace(/\/+$/, ""); // strip trailing slashes
+	return pathname.replace(/\/+$/, "");
 }
 
 export const syncLastGameFromPath = (pathname: string) => {

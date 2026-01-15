@@ -2,15 +2,16 @@
 	import { onDestroy, onMount } from "svelte"
 	import { get } from "svelte/store"
 	import { Hand, Chip } from "./components"
-	import { createBlackjackStore, outcomeMessage, type GameRules, type GameState, isTenValue } from "./lib/util"
+	import { createBlackjackStore, outcomeMessage, isTenValue, type GameRules, type GameState } from "./lib/util"
 	import { HandCoins, Spade } from "lucide-svelte"
+	import { browser } from "$app/environment";
 
 	onMount(() => {
-		debug = readDebug()
+		debug = readDebug();
 		debugTimer = window.setInterval(() => {
-			const next = readDebug()
-			if (next !== debug) debug = next
-		}, 200)
+			const next = readDebug();
+			if (next !== debug) debug = next;
+		}, 1000);
 		try {
 			const raw = localStorage.getItem("blackjack:chips")
 			const parsed = raw ? Number(raw) : NaN
@@ -233,13 +234,6 @@
 		setBetSafe(bet)
 	}
 
-	let debug = false
-	let debugTimer: number
-
-	const readDebug = () => localStorage.getItem("blackjack:debug") === "1"
-
-	onDestroy(() => window.clearInterval(debugTimer))
-
 	$: reqRoundPlaying = canPlay
 	$: reqTwoCards = cur.length === 2
 	$: reqPair =
@@ -251,12 +245,28 @@
 					isTenValue(cur[1].rank)))
 	$: reqBetCap = totalBet + add <= MAX_TOTAL_BET
 	$: reqChips = chips >= add
+
+	// Handling debug menu
+	let debug = false
+	let debugTimer: number | null = null
+
+	const readDebug = () => {
+		if (!browser) return false;
+		return (
+			localStorage.getItem("blackjack:debug") === "1" ||
+			localStorage.getItem("arcade:debug") === "1"
+		);
+	}
+
+	onDestroy(() => {
+		if (debugTimer != null) window.clearInterval(debugTimer);
+	});
 </script>
 
 {#if debug}
-	<div class="w-1/6 absolute right-3 text-xs text-white/70 border border-white/10 bg-white/5 rounded-lg p-3 space-y-1">
+	<div class="w-1/6 absolute right-3 top-16 text-xs text-white/70 border border-white/10 bg-white/5 rounded-lg p-3 space-y-1">
 		<div class="flex justify-between">
-			<span>Split requirements</span>
+			<span>Black Jack Debug Menu</span>
 			<span class={canSplit ? "text-emerald-200" : "text-rose-200"}>canSplit: {String(canSplit)}</span>
 		</div>
 		<br />
@@ -268,10 +278,17 @@
 		<br />
 		<div class="flex justify-between"><span class="text-yellow-100">shoe remaining:</span><span>{gs.shoe.length}</span></div>
 		<div class="flex justify-between"><span class="text-yellow-100">discard:</span><span>{gs.discard.length}</span></div>
+		<br />
+		<button
+			class="px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+			on:click={doReset}
+		>
+			Reset
+		</button>
 	</div>
 {/if}
 
-<header class="relative">
+<header class="relative mt-32 md:mt-0">
 	<h1 class="flex flex-row gap-1 items-center w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		<span class="bg-gradient-to-tr from-amber-600 to-yellow-500 bg-clip-text text-transparent">Black</span> <Spade size={20} class="fill-red-800 stroke-red-500" /> <span class="bg-gradient-to-tl from-amber-600 to-yellow-500 bg-clip-text text-transparent">Jack</span>
 	</h1>
@@ -284,7 +301,7 @@
 	{/if}
 </header>
 
-<div class="flex items-center justify-center p-4">
+<main class="flex items-center justify-center">
 	<div class="w-full max-w-xl space-y-4">
 		<div class="flex items-center justify-between">
 			<div class="text-white/60">
@@ -447,7 +464,7 @@
 
 		<div class="flex flex-wrap gap-2">
 			<button
-				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+				class="px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 				on:click={doHit}
 				disabled={!canHit}
 			>
@@ -455,7 +472,7 @@
 			</button>
 
 			<button
-				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+				class="px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 				on:click={doStand}
 				disabled={!canStand}
 			>
@@ -463,7 +480,7 @@
 			</button>
 
 			<button
-				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+				class="px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 				on:click={doDouble}
 				disabled={!canDouble}
 			>
@@ -472,24 +489,15 @@
 
 			{#if canSplit}
 				<button
-					class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+					class="px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
 					on:click={doSplit}
 				>
 					Split
 				</button>
 			{/if}
-
-			<div class="flex-1"></div>
-
-			<button
-				class="flex flex-row items-center gap-2 px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
-				on:click={doReset}
-			>
-				Reset Shoe
-			</button>
 		</div>
 	</div>
-</div>
+</main>
 
 <style>
 	.chipShimmer {

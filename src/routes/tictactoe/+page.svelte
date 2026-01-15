@@ -441,7 +441,7 @@
 	})
 </script>
 
-<header class="relative">
+<header class="relative mt-32 md:mt-0">
 	<h1 class="flex flex-row gap-1 w-fit mx-auto font-impact font-medium text-4xl text-center my-16">
 		<span class="-rotate-3 bg-gradient-to-b from-rose-300 to-rose-400 bg-clip-text text-transparent">Tic</span>-<span class="rotate-1 bg-gradient-to-b from-emerald-300 to-emerald-400 bg-clip-text text-transparent">Tac</span>-<span class="-rotate-2 bg-gradient-to-b from-sky-300 to-sky-400 bg-clip-text text-transparent">Toe</span>
 	</h1>
@@ -558,14 +558,21 @@
 		{/if}
 
 		{#if state !== State.Playing}
-			<div class="absolute inset-0 bg-black/10">
-				<div class="h-full flex justify-center items-center">
-					<button
-						class="p-1 px-8 bg-indigo-500 hover:ring ring-indigo-300 text-white text-lg font-anton rounded-md active:scale-95 transition-all"
-						on:click={sendReset}
-					>
-						Play Again
-					</button>
+			<div class="absolute inset-0 flex items-center justify-center">
+				<div class="absolute inset-0 bg-black/50 rounded-xl"></div>
+				<div class="relative z-10 w-[min(28rem,90vw)] rounded-xl bg-neutral-950/80 ring-1 ring-neutral-700 p-6 text-center">
+					<div class="font-impact text-4xl">
+						In your face!
+					</div>
+					<div class="mt-5 flex items-center justify-center gap-3">
+						<button
+							type="button"
+							on:click={sendReset}
+							class="px-4 py-2 rounded-md text-white bg-indigo-500 ring-1 ring-indigo-300 hover:ring-2 active:scale-95 transition disabled:opacity-60"
+						>
+							Play Again
+						</button>
+					</div>
 				</div>
 			</div>
 		{/if}
@@ -632,7 +639,7 @@
 					Create Room
 				{/if}
 			</button>
-			<div class="my-3 w-3/4 lg:w-fit flex items-center gap-2">
+			<div class={`${roomCode && "hidden"} my-3 w-3/4 lg:w-fit flex items-center gap-2`}>
 				<div class="flex-1 border-t border-slate-300/70" />
 					<span class="shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-300/70">
                         OR

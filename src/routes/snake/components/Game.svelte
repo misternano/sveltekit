@@ -17,7 +17,7 @@
 		</p>
 	</div>
 
-	<div class="w-full flex border-2 border-double">
+	<div class="w-full flex border-2 border-double rounded-xl">
 		{#each board as row, y}
 			<div>
 				{#each row as square, x}

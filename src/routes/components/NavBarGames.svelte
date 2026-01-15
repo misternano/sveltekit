@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from "svelte";
 	import { page } from "$app/stores";
-	import { Grid2x2Check, LayoutGrid, Spade, Worm } from "lucide-svelte";
+	import { Grid2x2Check, LayoutGrid, Spade, Worm, Bomb } from "lucide-svelte";
 	import { GAMES, type GameId, normalizePathname } from "$lib/game"
 
 	const dispatch = createEventDispatcher<{ navigate: void }>();
@@ -15,7 +15,8 @@
 		tictactoe: LayoutGrid,
 		sudoku: Grid2x2Check,
 		snake: Worm,
-		blackjack: Spade
+		blackjack: Spade,
+		minesweeper: Bomb,
 	};
 </script>
 
@@ -24,7 +25,7 @@
 		<a
 			href={g.path}
 			on:click={onNavigate}
-			class="group flex items-center gap-[0.55rem] px-[0.9rem] py-[0.55rem] rounded-full no-underline whitespace-nowrap select-none
+			class="group inline-flex items-center gap-[0.55rem] px-[0.9rem] py-[0.55rem] rounded-full no-underline whitespace-nowrap select-none
 			bg-gradient-to-b from-indigo-500/95 to-indigo-600/95 text-white
 			shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18),_0_22px_54px_rgba(0,0,0,0.65),_0_14px_34px_rgba(99,102,241,0.28)]
 			transform-gpu transition-[transform,box-shadow,background-color,color] duration-150 ease-out
@@ -41,7 +42,7 @@
 				class="opacity-95 text-white transition-[opacity,color,filter] duration-150 ease-out
 				drop-shadow-[0_10px_22px_rgba(0,0,0,0.35)]"
 			/>
-			<span class="hidden md:inline font-semibold tracking-[0.2px]">{g.name}</span>
+			<span class="font-semibold tracking-[0.2px]">{g.name}</span>
 		</a>
 	{:else}
 		<a
@@ -66,7 +67,7 @@
 				group-hover:opacity-100 group-hover:text-indigo-400
 				group-hover:drop-shadow-[0_12px_26px_rgba(99,102,241,0.22)]"
 			/>
-			<span class="hidden md:inline font-semibold tracking-[0.2px]">{g.name}</span>
+			<span class="font-semibold tracking-[0.2px]">{g.name}</span>
 		</a>
 	{/if}
 {/each}
