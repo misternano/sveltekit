@@ -23,7 +23,7 @@
 		console.info(`%c> Mounted`, "background-color:#1c68d4;color:white;padding:4rem;padding-block:0.5rem;width:100%;");
 	})
 
-	const MAX_TOTAL_BET = 50
+	const MAX_TOTAL_BET = 1000000
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 	const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
 
